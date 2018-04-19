@@ -1,0 +1,48 @@
+meta:
+  title: Test workflow
+  author: remram
+  date: 2018-04-18 18:57:16
+  description: Example pipeline used during development
+steps:
+  - description: Get CSV from URL
+    module:
+      type: download
+    parameters:
+      - url: file:///tmp/data.csv
+    outputs:
+      - file: table_filename
+  - description: Load column of CSV file
+    module:
+      type: script.python
+      version: ">= 3.3"
+      requirements:
+        - pandas
+    parameters:
+      - code: |
+          import pandas
+
+          df = pandas.read_csv(filename)
+          ages = numpy.array(df['age'])
+    inputs:
+      - filename: table_filename
+    outputs:
+      - ages: ages_array
+  - description: Print out report
+    module:
+      type: script.python
+    parameters:
+      - code: |
+          report = """\
+          Rows: {0}
+          Average: {1}
+          Minimum: {2}
+          Maximum: {3}
+          """.format(
+              len(ages),
+              ages.mean(),
+              ages.min(),
+              ages.max()
+          )
+          print(report)
+    inputs:
+      - ages: ages_array
