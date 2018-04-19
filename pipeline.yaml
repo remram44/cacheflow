@@ -19,10 +19,12 @@ steps:
         - pandas
     parameters:
       - code: |
+          import numpy
           import pandas
 
           df = pandas.read_csv(filename)
-          ages = numpy.array(df['age'])
+          ages = numpy.array(df[column])
+      - column: age
     inputs:
       - filename: table_filename
     outputs:
