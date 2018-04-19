@@ -4,7 +4,27 @@ meta:
   date: 2018-04-18 18:57:16
   description: Example pipeline used during development
 steps:
-  - description: Get CSV from URL
+  - description: Download a web page
+    module:
+      type: download
+      headers:
+        accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
+    parameters:
+      - url: https://framapiaf.org/@remram44
+    outputs:
+      - file: webpage
+  - description: Read web page bytes
+    module:
+      type: script.python
+    parameters:
+      - code: |
+          with open(filename, 'rb') as fp:
+              contents = fp.read()
+    inputs:
+      - filename: webpage
+    outputs:
+      - contents: webpage_bytes
+  - description: Get CSV from local file
     module:
       type: download
     parameters:
@@ -35,11 +55,15 @@ steps:
     parameters:
       - code: |
           report = """\
-          Rows: {0}
-          Average: {1}
-          Minimum: {2}
-          Maximum: {3}
+          Webpage:
+            Bytes: {0}
+          CSV:
+            Rows: {1}
+            Average: {2}
+            Minimum: {3}
+            Maximum: {4}
           """.format(
+              len(page),
               len(ages),
               ages.mean(),
               ages.min(),
@@ -48,3 +72,4 @@ steps:
           print(report)
     inputs:
       - ages: ages_array
+      - page: webpage_bytes

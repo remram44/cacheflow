@@ -6,7 +6,8 @@ from setuptools import setup
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-req = ['PyYAML']
+req = ['PyYAML',
+       'requests']
 setup(name='cacheflow',
       version='0.1-pre',
       packages=['cacheflow'],
