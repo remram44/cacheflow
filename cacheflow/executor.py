@@ -1,4 +1,6 @@
 import logging
+import shutil
+import tempfile
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +19,8 @@ class Executor(object):
         raise KeyError("Missing module")
 
     def execute(self, workflow):
-        logger.info("Executing workflow")
+        temp_dir = tempfile.mkdtemp(prefix='cacheflow_')
+        logger.info("Executing workflow, temp_dir=%r", temp_dir)
 
         # Load the modules
         steps = {}
@@ -50,10 +53,12 @@ class Executor(object):
             logger.info("Executing step %r", step.id)
             module, inputs = steps[step.id]
             try:
-                outputs = module(inputs, step.outputs)
+                outputs = module(inputs=inputs, output_names=step.outputs,
+                                 temp_dir=temp_dir)
             except Exception:
                 logger.exception("Got exception running module %r",
                                  module)
+                shutil.rmtree(temp_dir)
                 raise
 
             for output, to_step_id, to_input_name in dependents[step.id]:
@@ -65,6 +70,8 @@ class Executor(object):
                 steps[to_step_id][1].setdefault(to_input_name, []).append(
                     outputs[output]
                 )
+
+        shutil.rmtree(temp_dir)
 
         if to_execute:
             logger.error("Couldn't execute any step, %d remain",
