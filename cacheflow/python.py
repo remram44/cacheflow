@@ -8,12 +8,18 @@ class BuiltinPython(Module):
     """
     def __call__(self, inputs, output_names, **kwargs):
         code, = inputs.pop('code')
-        local = {k: v[-1] for k, v in inputs.items()}
+        local = {}
+        for env in inputs.get('env', []):
+            local.update(env)
+        for k, v in inputs.items():
+            local[k] = v[-1]
         local['__builtins__'] = builtins
         exec(compile(code, 'code', 'exec'), local, local)
         out = {}
         for name in output_names:
-            out[name] = local[name]
+            if name != 'env':
+                out[name] = local[name]
+        out['env'] = local
         return out
 
 

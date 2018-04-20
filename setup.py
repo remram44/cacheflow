@@ -9,14 +9,16 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
-req = ['PyYAML',
+req = ['markdown',
+       'PyYAML',
        'requests']
 setup(name='cacheflow',
       version='0.1-pre',
       packages=['cacheflow'],
       entry_points={
           'console_scripts': [
-              'cacheflow = cacheflow.main:main']},
+              'cacheflow = cacheflow.main:main',
+              'noteflow = cacheflow.noteflow:main']},
       install_requires=req,
       description="Caching Workflow Engine",
       long_description=description,

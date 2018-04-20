@@ -1,0 +1,19 @@
+# Test of noteflow
+
+This test file is markdown, but also contains code.
+
+```{type: script.python, version: ">=3.3", requirements: [numpy, pandas]}
+import pandas
+
+dataframe = pandas.DataFrame({'name': ["Remi", "Vicky", "JY", "LB"],
+                              'age': [28, 25, 27, 3]})
+print(dataframe)
+```
+
+Cells can use each other's output, and cacheflow will cache those for efficiency.
+
+```{type: script.python, requirements: [pandas]}
+print(dataframe['age'].mean())
+```
+
+Cool!
