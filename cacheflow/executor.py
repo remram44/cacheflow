@@ -18,7 +18,17 @@ class Executor(object):
                 return obj
         raise KeyError("Missing module")
 
-    def execute(self, workflow):
+    def execute(self, workflow, sinks=None, outputs=None):
+        """Execute a workflow.
+
+        :param workflow: Workflow whose steps will be executed.
+        :param sinks: An iterable of step IDs that we want executed, or
+        ``True`` to indicate all the sinks need to be executed. Defaults to
+        ``True`` if `outputs` is not set.
+        :param outputs: An iterable of output names to compute and return, or
+        ``True`` to return all the named outputs.
+        :return: A dictionary mapping output references to values.
+        """
         temp_dir = tempfile.mkdtemp(prefix='cacheflow_')
         logger.info("Executing workflow, temp_dir=%r", temp_dir)
 
