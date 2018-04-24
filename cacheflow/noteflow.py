@@ -1,3 +1,4 @@
+from html import escape
 import logging
 import markdown
 import os
@@ -12,20 +13,39 @@ logger = logging.getLogger(__name__)
 
 
 class Section(object):
-    pass
+    """Those are the sections of the document, which can be rendered.
+    """
+    def __init__(self, id):
+        self.id = id
 
 
 class ModuleSection(Section):
-    def __init__(self, module, lines):
+    """Module, the output will be obtained by executing it.
+    """
+    def __init__(self, id, module, lines):
+        super(ModuleSection, self).__init__(id)
         self.module = module
         self.lines = lines
         self.inputs = {'env'}
-        self.outputs = {'env'}
+        self.outputs = {'env', 'stream'}
+
+    def render_html(self, workflow_results, **kwargs):
+        streams = workflow_results[self.id].get('streams')
+        if not streams:
+            return None
+        return '\n'.join('<pre class="%s">%s</pre>' % (stream, escape(data))
+                         for stream, data in streams)
 
 
 class TextSection(Section):
-    def __init__(self, text):
+    """Text, output is just the rendered version of this.
+    """
+    def __init__(self, id, text):
+        super(TextSection, self).__init__(id)
         self.text = text
+
+    def render_html(self, markdown_renderer, **kwargs):
+        return markdown_renderer.convert(''.join(self.text))
 
 
 class Noteflow(object):
@@ -40,7 +60,7 @@ class Noteflow(object):
         for section in sections:
             if isinstance(section, ModuleSection):
                 # Create step
-                step = Step(len(steps), section.module,
+                step = Step(section.id, section.module,
                             section.inputs, section.outputs,
                             {'code': [''.join(section.lines)]})
                 steps[step.id] = step
@@ -75,7 +95,7 @@ def load_noteflow(fileobj):
     for line in fileobj:
         m = _re_step_start.match(line)
         if m is not None:
-            sections.append(TextSection(lines))
+            sections.append(TextSection(len(sections), lines))
             lines = []
 
             module = yaml.load(m.group(1))
@@ -84,28 +104,28 @@ def load_noteflow(fileobj):
                 if _re_step_end.match(line) is not None:
                     break
                 code.append(line)
-            sections.append(ModuleSection(module, code))
+            sections.append(ModuleSection(len(sections), module, code))
         else:
             lines.append(line)
 
     if lines:
-        sections.append(TextSection(lines))
+        sections.append(TextSection(len(sections), lines))
 
     return Noteflow(sections, {})
 
 
 def render(noteflow, executor, out):
     logger.info("Executing...")
-    executor.execute(noteflow.workflow)
+    results = executor.execute(noteflow.workflow)
 
     md = markdown.Markdown()
 
     logger.info("Writing output...")
     for section in noteflow.sections:
-        if isinstance(section, TextSection):
-            out.write(md.convert(''.join(section.text)))
-        else:
-            out.write('TODO')
+        rendered = section.render_html(markdown_renderer=md,
+                                       workflow_results=results)
+        if rendered:
+            out.write(rendered)
 
 
 def main():
