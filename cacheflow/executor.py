@@ -18,16 +18,20 @@ class Executor(object):
                 return obj
         raise KeyError("Missing module")
 
-    def execute(self, workflow, sinks=None):
+    def execute(self, workflow, sinks=None, globals=None):
         """Execute a workflow.
 
         :param workflow: Workflow whose steps will be executed.
         :param sinks: An iterable of step IDs that we want executed, or
         ``None`` to indicate all the sinks need to be executed.
+        :param globals: Global values which get passed to every module.
         :return: A dictionary mapping output references to values.
         """
         temp_dir = tempfile.mkdtemp(prefix='cacheflow_')
         logger.info("Executing workflow, temp_dir=%r", temp_dir)
+
+        if globals is None:
+            globals = {}
 
         if sinks is not None and not hasattr(sinks, 'items'):
             e = {}
@@ -66,7 +70,7 @@ class Executor(object):
             module, inputs = steps.pop(step.id)
             try:
                 outputs = module(inputs=inputs, output_names=step.outputs,
-                                 temp_dir=temp_dir)
+                                 temp_dir=temp_dir, globals=globals)
             except Exception:
                 logger.exception("Got exception running module %r",
                                  module)
