@@ -1,6 +1,38 @@
 import builtins
+import sys
 
 from .base import Module, ModuleLoader
+
+
+class OutputStreams(object):
+    class _Writer(object):
+        def __init__(self, output, stream):
+            self.output = output
+            self.stream = stream
+
+        def write(self, data):
+            self.output.append(self.stream, data)
+
+        def flush(self):
+            pass
+
+    def __init__(self):
+        self.outputs = []
+
+    def append(self, stream, data):
+        if self.outputs and self.outputs[-1][0] == stream:
+            self.outputs[-1][1].append(data)
+        else:
+            self.outputs.append((stream, [data]))
+
+    def get(self):
+        return [
+            (stream, ''.join(data))
+            for stream, data in self.outputs
+        ]
+
+    def writer(self, stream):
+        return self._Writer(self, stream)
 
 
 class BuiltinPython(Module):
@@ -14,12 +46,24 @@ class BuiltinPython(Module):
         for k, v in inputs.items():
             local[k] = v[-1]
         local['__builtins__'] = builtins
-        exec(compile(code, 'code', 'exec'), local, local)
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        try:
+            streams = OutputStreams()
+            sys.stdout = streams.writer('stdout')
+            sys.stderr = streams.writer('stderr')
+
+            exec(compile(code, 'code', 'exec'), local, local)
+        finally:
+            sys.stdout = old_stdout
+            sys.__stderr__ = old_stderr
+
         out = {}
         for name in output_names:
             if name != 'env':
-                out[name] = local[name]
+                out[name] = local.get(name)
         out['env'] = local
+        out['streams'] = streams.get()
         return out
 
 
