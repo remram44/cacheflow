@@ -18,19 +18,20 @@ class Executor(object):
                 return obj
         raise KeyError("Missing module")
 
-    def execute(self, workflow, sinks=None, outputs=None):
+    def execute(self, workflow, sinks=None):
         """Execute a workflow.
 
         :param workflow: Workflow whose steps will be executed.
         :param sinks: An iterable of step IDs that we want executed, or
-        ``True`` to indicate all the sinks need to be executed. Defaults to
-        ``True`` if `outputs` is not set.
-        :param outputs: An iterable of output names to compute and return, or
-        ``True`` to return all the named outputs.
+        ``None`` to indicate all the sinks need to be executed.
         :return: A dictionary mapping output references to values.
         """
         temp_dir = tempfile.mkdtemp(prefix='cacheflow_')
         logger.info("Executing workflow, temp_dir=%r", temp_dir)
+
+        if sinks is not None and not hasattr(sinks, 'items'):
+            e = {}
+            sinks = {step_id: e for step_id in sinks}
 
         # Load the modules
         steps = {}
@@ -55,13 +56,14 @@ class Executor(object):
         to_execute = set(workflow.steps)
 
         # Execute
+        results = {}
         while ready:
             step = workflow.steps[ready.pop()]
             to_execute.discard(step.id)
 
             # Run the module
             logger.info("Executing step %r", step.id)
-            module, inputs = steps[step.id]
+            module, inputs = steps.pop(step.id)
             try:
                 outputs = module(inputs=inputs, output_names=step.outputs,
                                  temp_dir=temp_dir)
@@ -71,6 +73,17 @@ class Executor(object):
                 shutil.rmtree(temp_dir)
                 raise
 
+            # Store global results
+            if sinks is None:
+                results[step.id] = outputs
+            elif step.id in sinks:
+                to_store = sinks[step.id]
+                results[step.id] = store = {}
+                for k, v in outputs.items():
+                    if k in to_store:
+                        store[k] = v
+
+            # Pass the outputs to connected steps
             for output, to_step_id, to_input_name in dependents[step.id]:
                 deps = dependencies[to_step_id]
                 deps.discard(step.id)
@@ -87,3 +100,5 @@ class Executor(object):
             logger.error("Couldn't execute any step, %d remain",
                          len(to_execute))
             raise RuntimeError("Can't execute remaining steps")
+
+        return results
