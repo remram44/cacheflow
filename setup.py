@@ -13,7 +13,7 @@ req = ['markdown',
        'PyYAML',
        'requests']
 setup(name='cacheflow',
-      version='0.1-pre',
+      version='0.1',
       packages=['cacheflow'],
       entry_points={
           'console_scripts': [

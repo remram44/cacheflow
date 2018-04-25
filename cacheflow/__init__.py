@@ -6,6 +6,9 @@ __all__ = ['Cache', 'NullCache', 'MemoryCache', 'ModuleLoader',
            'Executor']
 
 
+__version__ = '0.1'
+
+
 def main():
     pass
 
