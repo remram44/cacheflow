@@ -37,6 +37,8 @@ class Executor(object):
             e = {}
             sinks = {step_id: e for step_id in sinks}
 
+        # TODO: Only load & execute up to the sinks
+
         # Load the modules
         steps = {}
         for step in workflow.steps.values():

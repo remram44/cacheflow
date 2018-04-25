@@ -6,6 +6,14 @@ from urllib.parse import urlparse
 from .base import Module, ModuleLoader
 
 
+# TODO: More builtin modules
+# WriteFile: write a string to a temporary file
+# ShellCommand: execute a command
+# DockerCommand: execute a Docker container
+# FormatString: use Python's format(), or printf-like syntax
+# Checksum: check a file's checksum (or add to Download?)
+
+
 class Download(Module):
     """Downloads a file.
     """

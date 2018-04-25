@@ -14,6 +14,8 @@ def check_keys(obj, allowed_keys):
 
 
 def load_workflow(fileobj):
+    """Loads a workflow from a JSON file.
+    """
     obj = yaml.load(fileobj)
 
     check_keys(obj, ['meta', 'steps'])

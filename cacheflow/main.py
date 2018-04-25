@@ -9,6 +9,8 @@ from .python import BuiltinPythonLoader
 
 
 def main():
+    """Entrypoint for the ``cacheflow`` command.
+    """
     logging.basicConfig(level=logging.INFO)
 
     with open(sys.argv[1]) as fp:

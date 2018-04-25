@@ -35,6 +35,11 @@ class OutputStreams(object):
         return self._Writer(self, stream)
 
 
+# TODO: Figure out caching
+# TODO: Figure out isolation
+# TODO: Figure out calling different Python versions
+
+
 class BuiltinPython(Module):
     """Execute Python code in the current interpreter.
     """

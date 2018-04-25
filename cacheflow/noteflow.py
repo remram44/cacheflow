@@ -129,6 +129,8 @@ def render(noteflow, executor, out):
 
 
 def main():
+    """Entrypoint for the ``noteflow`` command.
+    """
     from .base import NullCache
     from .builtin_modules import BuiltinModulesLoader
     from .executor import Executor

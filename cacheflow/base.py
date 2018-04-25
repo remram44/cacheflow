@@ -1,6 +1,7 @@
 class Cache(object):
     """Cache system, storing data for later retrieval.
     """
+    # TODO: Figure out actual interface for this
     def has_key(self, key):
         """Indicates whether a value is in the cache.
         """
@@ -65,6 +66,8 @@ class ModuleLoader(object):
 
 
 class Workflow(object):
+    # TODO: Add more indexes in here (connection from step, ...)
+    # TODO: Provide an abstract base for this too (for SQL backend)
     def __init__(self, steps, connections, meta):
         self.steps = steps
         self.connections = connections
