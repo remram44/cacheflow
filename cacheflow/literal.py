@@ -101,7 +101,7 @@ def load_noteflow(fileobj):
             sections.append(Text(len(sections), lines))
             lines = []
 
-            step = yaml.load(m.group(1))
+            step = yaml.safe_load(m.group(1))
             code = []
             for line in fileobj:
                 if _re_step_end.match(line) is not None:
