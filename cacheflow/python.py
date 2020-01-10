@@ -61,7 +61,7 @@ class BuiltinPython(Component):
             exec(compile(code, 'code', 'exec'), local, local)
         finally:
             sys.stdout = old_stdout
-            sys.__stderr__ = old_stderr
+            sys.stderr = old_stderr
 
         out = {}
         for name in output_names:
