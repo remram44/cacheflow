@@ -1,5 +1,8 @@
 import cloudpickle
+import contextlib
 from hashlib import sha256
+import os
+import re
 
 from .base import Cache
 
@@ -31,6 +34,40 @@ class MemoryCache(Cache):
 
     def store(self, key, value, work_amount=None):
         self.store[key] = value
+
+
+class DirectoryCache(Cache):
+    """On-disk cache that writes to files in a directory.
+    """
+    def __init__(self, directory):
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+        self.directory = directory
+
+    _path_re = re.compile(r'[^A-Za-z0-9-]')
+
+    def _path(self, key):
+        assert isinstance(key, tuple)
+        return os.path.join(self.directory, '__'.join(
+            self._path_re.sub(lambda m: '_%x' % ord(m.group(0)), k)
+            for k in key
+        ))
+
+    def has_key(self, key):
+        return os.path.exists(self._path(key))
+
+    def retrieve(self, key):
+        stack = contextlib.ExitStack()
+        with stack:
+            try:
+                fp = stack.enter_context(open(self._path(key), 'rb'))
+            except FileNotFoundError:
+                raise KeyError(key)
+            return cloudpickle.load(fp)
+
+    def store(self, key, value, work_amount=None):
+        with open(self._path(key), 'wb') as fp:
+            cloudpickle.dump(value, fp)
 
 
 class HashFileWrapper(object):

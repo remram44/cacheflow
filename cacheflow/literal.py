@@ -135,7 +135,7 @@ def main():
     """Entrypoint for the ``noteflow`` command.
     """
     from .builtin_components import BuiltinComponentsLoader
-    from .cache import NullCache
+    from .cache import DirectoryCache
     from .executor import Executor
     from .python import BuiltinPythonLoader
 
@@ -146,7 +146,7 @@ def main():
         noteflow = load_noteflow(fp)
 
     executor = Executor(
-        NullCache(),
+        DirectoryCache('_cf_cache'),
         [BuiltinPythonLoader(), BuiltinComponentsLoader()],
     )
     with open(os.path.splitext(sys.argv[1])[0] + '.html', 'w') as out:

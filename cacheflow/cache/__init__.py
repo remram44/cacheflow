@@ -1,5 +1,5 @@
 from .base import Cache
-from .core import NullCache, MemoryCache
+from .core import NullCache, MemoryCache, DirectoryCache
 
 
 class SmartCache(Cache):
