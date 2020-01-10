@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "cacheflow"
+version = "0.1"
+description = "Caching Workflow Engine"
+
+license = "BSD-3-Clause"
+
+authors = [
+    "Remi Rampin <remi.rampin@nyu.edu>",
+]
+
+readme = "README.rst"
+
+repository = "https://gitlab.com/remram44/cacheflow"
+homepage = "https://gitlab.com/remram44/cacheflow"
+
+keywords = ["workflow", "execution", "cache", "caching", "notebook"]
+
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: SQL",
+    "Programming Language :: Unix Shell",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Utilities",
+]
+
+include = []
+
+[tool.poetry.dependencies]
+python = "^3.6"
+markdown = "^3"
+requests = "^2.22"
+PyYAML = "^5.3"
+
+[tool.poetry.dev-dependencies]
+pandas = "^0.25.3"
+
+[tool.poetry.scripts]
+cacheflow = "cacheflow.cli:main"
+noteflow = "cacheflow.literal:main"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
