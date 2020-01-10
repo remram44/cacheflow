@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from .builtin_modules import BuiltinModulesLoader
+from .builtin_components import BuiltinComponentsLoader
 from .cache import NullCache
 from .executor import Executor
 from .json import load_workflow
@@ -17,5 +17,5 @@ def main():
         workflow = load_workflow(fp)
 
     executor = Executor(NullCache(),
-                        [BuiltinPythonLoader(), BuiltinModulesLoader()])
+                        [BuiltinPythonLoader(), BuiltinComponentsLoader()])
     executor.execute(workflow)

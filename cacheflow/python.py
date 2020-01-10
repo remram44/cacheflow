@@ -1,7 +1,7 @@
 import builtins
 import sys
 
-from .base import Module, ModuleLoader
+from .base import Component, ComponentLoader
 
 
 class OutputStreams(object):
@@ -40,7 +40,7 @@ class OutputStreams(object):
 # TODO: Figure out calling different Python versions
 
 
-class BuiltinPython(Module):
+class BuiltinPython(Component):
     """Execute Python code in the current interpreter.
     """
     def __call__(self, inputs, output_names, **kwargs):
@@ -72,8 +72,8 @@ class BuiltinPython(Module):
         return out
 
 
-class BuiltinPythonLoader(ModuleLoader):
-    def get_module(self, module):
-        if module.get('type') != 'script.python':
+class BuiltinPythonLoader(ComponentLoader):
+    def get_component(self, component_def):
+        if component_def.get('type') != 'script.python':
             return None
         return BuiltinPython()

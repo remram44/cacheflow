@@ -1,5 +1,5 @@
-class Module(object):
-    """A module, as provided by a `ModuleLoader`.
+class Component(object):
+    """A workflow component, as provided by a `ComponentLoader`.
     """
     def __call__(self, inputs, output_names, **kwargs):
         """Run on the inputs to provide outputs.
@@ -7,11 +7,11 @@ class Module(object):
         raise NotImplementedError
 
 
-class ModuleLoader(object):
-    """Module loader, capable of providing modules used by workflow steps.
+class ComponentLoader(object):
+    """Component loader, capable of providing workflow components.
     """
-    def get_module(self, module):
-        """Returns a module or None.
+    def get_component(self, component_def):
+        """Returns a component or None.
         """
         raise NotImplementedError
 
@@ -33,9 +33,9 @@ class Workflow(object):
 
 
 class Step(object):
-    def __init__(self, id, module_def, inputs, outputs, parameters):
+    def __init__(self, id, component_def, inputs, outputs, parameters):
         self.id = id
-        self.module_def = module_def
+        self.component_def = component_def
         self.inputs = inputs
         self.outputs = outputs
         self.parameters = parameters

@@ -7,16 +7,16 @@ logger = logging.getLogger(__name__)
 
 
 class Executor(object):
-    def __init__(self, cache, module_loaders):
+    def __init__(self, cache, component_loaders):
         self.cache = cache
-        self.module_loaders = module_loaders
+        self.component_loaders = component_loaders
 
-    def load_module(self, module):
-        for loader in self.module_loaders:
-            obj = loader.get_module(module)
+    def load_component(self, component_def):
+        for loader in self.component_loaders:
+            obj = loader.get_component(component_def)
             if obj is not None:
                 return obj
-        raise KeyError("Missing module")
+        raise KeyError("Missing component")
 
     def execute(self, workflow, sinks=None, globals=None):
         """Execute a workflow.
@@ -24,7 +24,7 @@ class Executor(object):
         :param workflow: Workflow whose steps will be executed.
         :param sinks: An iterable of step IDs that we want executed, or
         ``None`` to indicate all the sinks need to be executed.
-        :param globals: Global values which get passed to every module.
+        :param globals: Global values which get passed to every step.
         :return: A dictionary mapping output references to values.
         """
         temp_dir = tempfile.mkdtemp(prefix='cacheflow_')
@@ -39,12 +39,12 @@ class Executor(object):
 
         # TODO: Only load & execute up to the sinks
 
-        # Load the modules
+        # Load the component
         steps = {}
         for step in workflow.steps.values():
-            mod = self.load_module(step.module_def)
+            mod = self.load_component(step.component_def)
             steps[step.id] = mod, dict(step.parameters)
-        logger.info("Loaded %d modules", len(steps))
+        logger.info("Loaded %d components", len(steps))
 
         # Store dependencies
         dependencies = {step_id: set() for step_id in workflow.steps}
@@ -67,15 +67,17 @@ class Executor(object):
             step = workflow.steps[ready.pop()]
             to_execute.discard(step.id)
 
-            # Run the module
+            # Run the step
             logger.info("Executing step %r", step.id)
-            module, inputs = steps.pop(step.id)
+            component, inputs = steps.pop(step.id)
             try:
-                outputs = module(inputs=inputs, output_names=step.outputs,
-                                 temp_dir=temp_dir, globals=globals)
+                outputs = component(
+                    inputs=inputs, output_names=step.outputs,
+                    temp_dir=temp_dir, globals=globals,
+                )
             except Exception:
-                logger.exception("Got exception running module %r",
-                                 module)
+                logger.exception("Got exception running component %r",
+                                 component)
                 shutil.rmtree(temp_dir)
                 raise
 

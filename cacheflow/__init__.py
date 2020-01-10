@@ -1,8 +1,8 @@
-from .base import ModuleLoader
+from .base import ComponentLoader
 from .executor import Executor
 
 
-__all__ = ['ModuleLoader', 'Executor']
+__all__ = ['ComponentLoader', 'Executor']
 
 
 __version__ = '0.1'

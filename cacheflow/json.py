@@ -25,7 +25,7 @@ def load_workflow(fileobj):
     input_refs = []
     output_refs = {}
     for step in obj['steps']:
-        check_keys(step, ['module', 'inputs', 'outputs', 'parameters',
+        check_keys(step, ['component', 'inputs', 'outputs', 'parameters',
                           'description'])
         step_id = len(steps)
 
@@ -62,7 +62,7 @@ def load_workflow(fileobj):
             parameters.setdefault(name, []).append(value)
 
         # Store step
-        steps[step_id] = Step(step_id, step['module'], inputs, outputs,
+        steps[step_id] = Step(step_id, step['component'], inputs, outputs,
                               parameters)
 
     # Store connections

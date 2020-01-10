@@ -18,13 +18,16 @@ class Section(object):
     def __init__(self, id):
         self.id = id
 
+    def render_html(self, **kwargs):
+        raise NotImplementedError
 
-class ModuleSection(Section):
-    """Module, the output will be obtained by executing it.
+
+class WorkflowStep(Section):
+    """Workflow step, the output will be obtained by executing it.
     """
-    def __init__(self, id, module, lines):
-        super(ModuleSection, self).__init__(id)
-        self.module = module
+    def __init__(self, id, step, lines):
+        super(WorkflowStep, self).__init__(id)
+        self.step = step
         self.lines = lines
         self.inputs = {'env'}
         self.outputs = {'env', 'stream'}
@@ -37,11 +40,11 @@ class ModuleSection(Section):
                          for stream, data in streams)
 
 
-class TextSection(Section):
+class Text(Section):
     """Text, output is just the rendered version of this.
     """
     def __init__(self, id, text):
-        super(TextSection, self).__init__(id)
+        super(Text, self).__init__(id)
         self.text = text
 
     def render_html(self, markdown_renderer, **kwargs):
@@ -58,9 +61,9 @@ class Noteflow(object):
         outputs = {}
         connections = {}
         for section in sections:
-            if isinstance(section, ModuleSection):
+            if isinstance(section, WorkflowStep):
                 # Create step
-                step = Step(section.id, section.module,
+                step = Step(section.id, section.step,
                             section.inputs, section.outputs,
                             {'code': [''.join(section.lines)]})
                 steps[step.id] = step
@@ -95,21 +98,21 @@ def load_noteflow(fileobj):
     for line in fileobj:
         m = _re_step_start.match(line)
         if m is not None:
-            sections.append(TextSection(len(sections), lines))
+            sections.append(Text(len(sections), lines))
             lines = []
 
-            module = yaml.load(m.group(1))
+            step = yaml.load(m.group(1))
             code = []
             for line in fileobj:
                 if _re_step_end.match(line) is not None:
                     break
                 code.append(line)
-            sections.append(ModuleSection(len(sections), module, code))
+            sections.append(WorkflowStep(len(sections), step, code))
         else:
             lines.append(line)
 
     if lines:
-        sections.append(TextSection(len(sections), lines))
+        sections.append(Text(len(sections), lines))
 
     return Noteflow(sections, {})
 
@@ -131,11 +134,10 @@ def render(noteflow, executor, out):
 def main():
     """Entrypoint for the ``noteflow`` command.
     """
-    from .builtin_modules import BuiltinModulesLoader
+    from .builtin_components import BuiltinComponentsLoader
     from .cache import NullCache
     from .executor import Executor
     from .python import BuiltinPythonLoader
-
 
     logging.basicConfig(level=logging.INFO)
 
@@ -143,7 +145,9 @@ def main():
     with open(sys.argv[1]) as fp:
         noteflow = load_noteflow(fp)
 
-    executor = Executor(NullCache(),
-                        [BuiltinPythonLoader(), BuiltinModulesLoader()])
+    executor = Executor(
+        NullCache(),
+        [BuiltinPythonLoader(), BuiltinComponentsLoader()],
+    )
     with open(os.path.splitext(sys.argv[1])[0] + '.html', 'w') as out:
         render(noteflow, executor, out)

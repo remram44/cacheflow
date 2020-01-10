@@ -3,10 +3,10 @@ import tempfile
 import requests
 from urllib.parse import urlparse
 
-from .base import Module, ModuleLoader
+from .base import Component, ComponentLoader
 
 
-# TODO: More builtin modules
+# TODO: More builtin components
 # WriteFile: write a string to a temporary file
 # ShellCommand: execute a command
 # DockerCommand: execute a Docker container
@@ -14,7 +14,7 @@ from .base import Module, ModuleLoader
 # Checksum: check a file's checksum (or add to Download?)
 
 
-class Download(Module):
+class Download(Component):
     """Downloads a file.
     """
     def __init__(self, headers={}):
@@ -44,7 +44,7 @@ class Download(Module):
             return {'file': filename}
 
 
-class EmptyFile(Module):
+class EmptyFile(Component):
     """Gets an empty temporary file.
     """
     def __init__(self, suffix=None):
@@ -56,20 +56,20 @@ class EmptyFile(Module):
         return filename
 
 
-class BuiltinModulesLoader(ModuleLoader):
-    """Built-in modules to do basic things.
+class BuiltinComponentsLoader(ComponentLoader):
+    """Built-in components to do basic things.
     """
     TABLE = dict(
         download=Download,
         empty_file=EmptyFile,
     )
 
-    def get_module(self, module):
+    def get_component(self, component_def):
         try:
-            mod = self.TABLE[module.get('type')]
+            component = self.TABLE[component_def.get('type')]
         except KeyError:
             return None
         else:
-            module = dict(module)
-            module.pop('type', None)
-            return mod(**module)
+            component_def = dict(component_def)
+            component_def.pop('type', None)
+            return component(**component_def)
