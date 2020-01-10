@@ -1,3 +1,6 @@
+import cloudpickle
+from hashlib import sha256
+
 from .base import Cache
 
 
@@ -28,3 +31,23 @@ class MemoryCache(Cache):
 
     def store(self, key, value, work_amount=None):
         self.store[key] = value
+
+
+class HashFileWrapper(object):
+    def __init__(self, h):
+        self.h = h
+
+    def write(self, b):
+        self.h.update(b)
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+
+def hash_value(value):
+    h = sha256()
+    cloudpickle.dump(value, HashFileWrapper(h))
+    return h.hexdigest()

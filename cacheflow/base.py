@@ -1,10 +1,31 @@
+from hashlib import sha256
+
+from .cache.core import hash_value
+
+
 class Component(object):
     """A workflow component, as provided by a `ComponentLoader`.
     """
-    def __call__(self, inputs, output_names, **kwargs):
+    def __init__(self):
+        self.outputs = {}
+
+    def set_output(self, name, value, hash=None):
+        if not hash:
+            hash = hash_value(value)
+        self.outputs[name] = value, hash
+
+    def execute(self, inputs, output_names, **kwargs):
         """Run on the inputs to provide outputs.
         """
         raise NotImplementedError
+
+    @classmethod
+    def compute_hash(cls, input_hashes):
+        fqdn = ('%s.%s\n' % (cls.__module__, cls.__name__))
+        h = sha256(fqdn.encode())
+        for i_n, i_h in sorted(input_hashes.items()):
+            h.update(('%s=%s\n' % (i_n, i_h)).encode())
+        return h.hexdigest()
 
 
 class ComponentLoader(object):

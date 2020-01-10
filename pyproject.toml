@@ -43,6 +43,7 @@ python = "^3.6"
 markdown = "^3"
 requests = "^2.22"
 PyYAML = "^5.3"
+cloudpickle = "^1.2"
 
 [tool.poetry.dev-dependencies]
 pandas = "^0.25.3"

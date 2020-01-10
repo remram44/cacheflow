@@ -17,10 +17,7 @@ from .base import Component, ComponentLoader
 class Download(Component):
     """Downloads a file.
     """
-    def __init__(self, headers={}):
-        self.headers = headers
-
-    def __call__(self, inputs, temp_dir, **kwargs):
+    def execute(self, inputs, temp_dir, **kwargs):
         url, = inputs['url']
         if url.startswith('file://'):
             # Just point directly at file
@@ -28,7 +25,7 @@ class Download(Component):
             return {'file': url[7:]}
         else:
             # Download with requests
-            r = requests.get(url, headers=self.headers)
+            r = requests.get(url, headers=inputs['headers'])
 
             # Create file with correct extension
             path = urlparse(url).path
@@ -41,19 +38,16 @@ class Download(Component):
                     f.write(chunk)
             os.close(fd)
 
-            return {'file': filename}
+            self.set_output('filename', filename)
 
 
 class EmptyFile(Component):
     """Gets an empty temporary file.
     """
-    def __init__(self, suffix=None):
-        self.suffix = suffix
-
-    def __call__(self, inputs, temp_dir, **kwargs):
-        fd, filename = tempfile.mkstemp(self.suffix, dir=temp_dir)
+    def execute(self, inputs, temp_dir, **kwargs):
+        fd, filename = tempfile.mkstemp(inputs['suffix'], dir=temp_dir)
         os.close(fd)
-        return filename
+        self.set_output('filename', filename)
 
 
 class BuiltinComponentsLoader(ComponentLoader):
