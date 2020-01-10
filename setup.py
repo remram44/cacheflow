@@ -17,8 +17,8 @@ setup(name='cacheflow',
       packages=['cacheflow'],
       entry_points={
           'console_scripts': [
-              'cacheflow = cacheflow.main:main',
-              'noteflow = cacheflow.noteflow:main']},
+              'cacheflow = cacheflow.cli:main',
+              'noteflow = cacheflow.literal:main']},
       install_requires=req,
       description="Caching Workflow Engine",
       long_description=description,

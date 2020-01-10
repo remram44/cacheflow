@@ -1,9 +1,8 @@
-from .base import Cache, NullCache, MemoryCache, ModuleLoader
+from .base import ModuleLoader
 from .executor import Executor
 
 
-__all__ = ['Cache', 'NullCache', 'MemoryCache', 'ModuleLoader',
-           'Executor']
+__all__ = ['ModuleLoader', 'Executor']
 
 
 __version__ = '0.1'

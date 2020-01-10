@@ -1,8 +1,8 @@
 import logging
 import sys
 
-from .base import NullCache
 from .builtin_modules import BuiltinModulesLoader
+from .cache import NullCache
 from .executor import Executor
 from .json import load_workflow
 from .python import BuiltinPythonLoader
