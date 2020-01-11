@@ -5,16 +5,16 @@ meta:
   description: Example pipeline used during development
 steps:
 - description: Download a web page
-  module:
+  component:
     type: download
-    headers:
-      accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
   parameters:
   - url: https://framapiaf.org/@remram44
+  - headers:
+      accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
   outputs:
-  - file: webpage
+  - filename: webpage
 - description: Read web page bytes
-  module:
+  component:
     type: script.python
   parameters:
   - code: |
@@ -25,14 +25,14 @@ steps:
   outputs:
   - contents: webpage_bytes
 - description: Get CSV from local file
-  module:
+  component:
     type: download
   parameters:
   - url: file:///tmp/data.csv
   outputs:
-  - file: table_filename
+  - filename: table_filename
 - description: Load column of CSV file
-  module:
+  component:
     type: script.python
     version: ">= 3.3"
     requirements:
@@ -50,7 +50,7 @@ steps:
   outputs:
   - ages: ages_array
 - description: Print out report
-  module:
+  component:
     type: script.python
   parameters:
   - code: |

@@ -63,10 +63,9 @@ class BuiltinPython(Component):
             sys.stdout = old_stdout
             sys.stderr = old_stderr
 
-        out = {}
         for name in output_names:
             if name != 'env':
-                out[name] = local.get(name)
+                self.set_output(name, local.get(name))
         local.pop('__builtins__', None)
         self.set_output('env', local)
         self.set_output('streams', streams.get())

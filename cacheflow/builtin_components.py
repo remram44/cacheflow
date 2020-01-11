@@ -19,13 +19,14 @@ class Download(Component):
     """
     def execute(self, inputs, temp_dir, **kwargs):
         url, = inputs['url']
+        headers, = inputs.get('headers', (None,))
         if url.startswith('file://'):
             # Just point directly at file
             # Workflow steps are not supposed to change their inputs
-            return {'file': url[7:]}
+            self.set_output('filename', url[7:])
         else:
             # Download with requests
-            r = requests.get(url, headers=inputs['headers'])
+            r = requests.get(url, headers=headers)
 
             # Create file with correct extension
             path = urlparse(url).path
@@ -45,7 +46,8 @@ class EmptyFile(Component):
     """Gets an empty temporary file.
     """
     def execute(self, inputs, temp_dir, **kwargs):
-        fd, filename = tempfile.mkstemp(inputs['suffix'], dir=temp_dir)
+        suffix, = inputs.get('suffix', (None,))
+        fd, filename = tempfile.mkstemp(suffix, dir=temp_dir)
         os.close(fd)
         self.set_output('filename', filename)
 
