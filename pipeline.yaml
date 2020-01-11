@@ -4,72 +4,72 @@ meta:
   date: 2018-04-18 18:57:16
   description: Example pipeline used during development
 steps:
-  - description: Download a web page
-    module:
-      type: download
-      headers:
-        accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
-    parameters:
-      - url: https://framapiaf.org/@remram44
-    outputs:
-      - file: webpage
-  - description: Read web page bytes
-    module:
-      type: script.python
-    parameters:
-      - code: |
-          with open(filename, 'rb') as fp:
-              contents = fp.read()
-    inputs:
-      - filename: webpage
-    outputs:
-      - contents: webpage_bytes
-  - description: Get CSV from local file
-    module:
-      type: download
-    parameters:
-      - url: file:///tmp/data.csv
-    outputs:
-      - file: table_filename
-  - description: Load column of CSV file
-    module:
-      type: script.python
-      version: ">= 3.3"
-      requirements:
-        - pandas
-    parameters:
-      - code: |
-          import numpy
-          import pandas
+- description: Download a web page
+  module:
+    type: download
+    headers:
+      accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
+  parameters:
+  - url: https://framapiaf.org/@remram44
+  outputs:
+  - file: webpage
+- description: Read web page bytes
+  module:
+    type: script.python
+  parameters:
+  - code: |
+      with open(filename, 'rb') as fp:
+          contents = fp.read()
+  inputs:
+  - filename: webpage
+  outputs:
+  - contents: webpage_bytes
+- description: Get CSV from local file
+  module:
+    type: download
+  parameters:
+  - url: file:///tmp/data.csv
+  outputs:
+  - file: table_filename
+- description: Load column of CSV file
+  module:
+    type: script.python
+    version: ">= 3.3"
+    requirements:
+    - pandas
+  parameters:
+  - code: |
+      import numpy
+      import pandas
 
-          df = pandas.read_csv(filename)
-          ages = numpy.array(df[column])
-      - column: age
-    inputs:
-      - filename: table_filename
-    outputs:
-      - ages: ages_array
-  - description: Print out report
-    module:
-      type: script.python
-    parameters:
-      - code: |
-          report = """\
-          Webpage:
-            Bytes: {0}
-          CSV:
-            Rows: {1}
-            Average: {2}
-            Minimum: {3}
-            Maximum: {4}
-          """.format(
-              len(page),
-              len(ages),
-              ages.mean(),
-              ages.min(),
-              ages.max()
-          )
-          print(report)
-    inputs:
-      - ages: ages_array
-      - page: webpage_bytes
+      df = pandas.read_csv(filename)
+      ages = numpy.array(df[column])
+  - column: age
+  inputs:
+  - filename: table_filename
+  outputs:
+  - ages: ages_array
+- description: Print out report
+  module:
+    type: script.python
+  parameters:
+  - code: |
+      report = """\
+      Webpage:
+        Bytes: {0}
+      CSV:
+        Rows: {1}
+        Average: {2}
+        Minimum: {3}
+        Maximum: {4}
+      """.format(
+          len(page),
+          len(ages),
+          ages.mean(),
+          ages.min(),
+          ages.max()
+      )
+      print(report)
+  inputs:
+  - ages: ages_array
+  - page: webpage_bytes
