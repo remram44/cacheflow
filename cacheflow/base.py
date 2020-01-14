@@ -1,17 +1,18 @@
 from hashlib import sha256
 
-from .cache.core import hash_value
+from .cache.core import UNHASHABLE, hash_value
 
 
 class Component(object):
     """A workflow component, as provided by a `ComponentLoader`.
     """
-    def __init__(self):
+    def __init__(self, pickling):
         self.outputs = {}
+        self.pickling = pickling
 
     def set_output(self, name, value, hash=None):
         if not hash:
-            hash = hash_value(value)
+            hash = hash_value(value, self.pickling)
         self.outputs[name] = value, hash
 
     def execute(self, inputs, output_names, **kwargs):
@@ -24,6 +25,8 @@ class Component(object):
         fqdn = ('%s.%s\n' % (cls.__module__, cls.__name__))
         h = sha256(fqdn.encode())
         for i_n, i_h in sorted(input_hashes.items()):
+            if i_h == UNHASHABLE:
+                return UNHASHABLE
             h.update(('%s=%s\n' % (i_n, i_h)).encode())
         return h.hexdigest()
 
@@ -31,7 +34,7 @@ class Component(object):
 class ComponentLoader(object):
     """Component loader, capable of providing workflow components.
     """
-    def get_component(self, component_def):
+    def get_component(self, component_def, **kwargs):
         """Returns a component or None.
         """
         raise NotImplementedError

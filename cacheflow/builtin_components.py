@@ -1,9 +1,10 @@
 import os
-import tempfile
 import requests
+import shutil
 from urllib.parse import urlparse
 
 from .base import Component, ComponentLoader
+from .cache.core import TemporaryFile
 
 
 # TODO: More builtin components
@@ -20,26 +21,24 @@ class Download(Component):
     def execute(self, inputs, temp_dir, **kwargs):
         url, = inputs['url']
         headers, = inputs.get('headers', (None,))
+
+        # Create file with correct extension
+        path = urlparse(url).path
+        extension = os.path.splitext(path)[1]
+        temp_file = TemporaryFile(temp_dir, suffix=extension)
+
         if url.startswith('file://'):
-            # Just point directly at file
-            # Workflow steps are not supposed to change their inputs
-            self.set_output('filename', url[7:])
+            shutil.copyfile(url[7:], temp_file.name)
         else:
             # Download with requests
             r = requests.get(url, headers=headers)
 
-            # Create file with correct extension
-            path = urlparse(url).path
-            extension = os.path.splitext(path)[1]
-            fd, filename = tempfile.mkstemp(extension, dir=temp_dir)
-
             # Write file to disk
-            with open(filename, 'wb') as f:
+            with open(temp_file.name, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=4096):
                     f.write(chunk)
-            os.close(fd)
 
-            self.set_output('filename', filename)
+        self.set_output('file', temp_file)
 
 
 class EmptyFile(Component):
@@ -47,9 +46,8 @@ class EmptyFile(Component):
     """
     def execute(self, inputs, temp_dir, **kwargs):
         suffix, = inputs.get('suffix', (None,))
-        fd, filename = tempfile.mkstemp(suffix, dir=temp_dir)
-        os.close(fd)
-        self.set_output('filename', filename)
+        temp_file = TemporaryFile(temp_dir, suffix=suffix)
+        self.set_output('file', temp_file)
 
 
 class BuiltinComponentsLoader(ComponentLoader):
@@ -60,7 +58,7 @@ class BuiltinComponentsLoader(ComponentLoader):
         empty_file=EmptyFile,
     )
 
-    def get_component(self, component_def):
+    def get_component(self, component_def, **kwargs):
         try:
             component = self.TABLE[component_def.get('type')]
         except KeyError:
@@ -68,4 +66,4 @@ class BuiltinComponentsLoader(ComponentLoader):
         else:
             component_def = dict(component_def)
             component_def.pop('type', None)
-            return component(**component_def)
+            return component(**kwargs)

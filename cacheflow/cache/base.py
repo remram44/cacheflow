@@ -7,12 +7,12 @@ class Cache(object):
         """
         raise NotImplementedError
 
-    def retrieve(self, key):
+    def retrieve(self, key, **kwargs):
         """Gets a value from the cache.
         """
         raise NotImplementedError
 
-    def store(self, key, value, work_amount=None):
+    def store(self, key, value, **kwargs):
         """Stores a new value to the cache.
         """
         raise NotImplementedError

@@ -72,7 +72,7 @@ class BuiltinPython(Component):
 
 
 class BuiltinPythonLoader(ComponentLoader):
-    def get_component(self, component_def):
+    def get_component(self, component_def, **kwargs):
         if component_def.get('type') != 'script.python':
             return None
-        return BuiltinPython()
+        return BuiltinPython(**kwargs)

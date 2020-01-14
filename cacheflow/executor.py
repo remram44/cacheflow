@@ -2,7 +2,7 @@ import logging
 import shutil
 import tempfile
 
-from .cache.core import hash_value
+from .cache.core import hash_value, UNHASHABLE, Pickling
 
 
 logger = logging.getLogger(__name__)
@@ -23,8 +23,11 @@ class InternalCache(object):
         self.cache.store((self.step_hash, 'internal', key), value)
 
 
-def hash_dict_list(dct):
-    return {k: [(e, hash_value(e)) for e in v] for k, v in dct.items()}
+def hash_dict_list(dct, pickling):
+    return {
+        k: [(e, hash_value(e, pickling)) for e in v]
+        for k, v in dct.items()
+    }
 
 
 class Executor(object):
@@ -32,9 +35,9 @@ class Executor(object):
         self.cache = cache
         self.component_loaders = component_loaders
 
-    def load_component(self, component_def):
+    def load_component(self, component_def, pickling):
         for loader in self.component_loaders:
-            obj = loader.get_component(component_def)
+            obj = loader.get_component(component_def, pickling=pickling)
             if obj is not None:
                 return obj
         raise KeyError("Missing component")
@@ -49,6 +52,7 @@ class Executor(object):
         :return: A dictionary mapping output references to values.
         """
         temp_dir = tempfile.mkdtemp(prefix='cacheflow_')
+        pickling = Pickling(temp_dir)
         logger.info("Executing workflow, temp_dir=%r", temp_dir)
 
         if globals is None:
@@ -85,8 +89,11 @@ class Executor(object):
             for step_id in open_steps_:
                 step = workflow.steps[step_id]
                 # Load component
-                component = self.load_component(step.component_def)
-                steps[step.id] = component, hash_dict_list(step.parameters)
+                component = self.load_component(step.component_def, pickling)
+                steps[step.id] = (
+                    component,
+                    hash_dict_list(step.parameters, pickling),
+                )
                 # Record dependencies
                 dependencies[step.id] = deps = set()
                 for s, o, i in wf_dependencies[step.id]:
@@ -120,9 +127,18 @@ class Executor(object):
                 self.cache,
                 step_hash,
             )
-            try:
-                outputs = self.cache.retrieve((step_hash, 'outputs'))
-            except KeyError:
+            outputs = None
+            if step_hash != UNHASHABLE:
+                try:
+                    outputs = self.cache.retrieve(
+                        (step_hash, 'outputs'),
+                        pickling=pickling,
+                    )
+                except KeyError:
+                    pass
+                else:
+                    logger.info("Got step %r from cache", step.id)
+            if outputs is None:
                 logger.info("Executing step %r", step.id)
                 try:
                     component.execute(
@@ -137,9 +153,11 @@ class Executor(object):
                     shutil.rmtree(temp_dir)
                     raise
                 outputs = component.outputs
-                self.cache.store((step_hash, 'outputs'), outputs)
-            else:
-                logger.info("Got step %r from cache", step.id)
+                if step_hash != UNHASHABLE:
+                    self.cache.store(
+                        (step_hash, 'outputs'), outputs,
+                        pickling=pickling,
+                    )
 
             # Store global results
             if sinks is None:
@@ -160,9 +178,16 @@ class Executor(object):
                     if not deps:
                         ready.add(to_step_id)
                         logger.info("Step %r now ready", to_step_id)
-                    steps[to_step_id][1].setdefault(to_input_name, []).append(
-                        outputs[output]
-                    )
+                    try:
+                        value = outputs[output]
+                    except KeyError:
+                        raise KeyError("Step %r did not set an output %r" % (
+                            step.id, output,
+                        )) from None
+                    else:
+                        steps[to_step_id][1] \
+                            .setdefault(to_input_name, []) \
+                            .append(value)
 
         shutil.rmtree(temp_dir)
 

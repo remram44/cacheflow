@@ -15,12 +15,12 @@ class SmartCache(Cache):
     def has_key(self, key):
         return self.store.has_key(key)
 
-    def retrieve(self, key):
-        value = self.store.retrieve(key)
+    def retrieve(self, key, **kwargs):
+        value = self.store.retrieve(key, **kwargs)
         # TODO: Note that this key is popular
         return value
 
-    def store(self, key, value, work_amount=None):
+    def store(self, key, value, work_amount=None, **kwargs):
         # TODO: Decide whether to store
         # TODO: Need additional metadata to decide whether to store (deps)
-        self.store.store(key, value, work_amount=work_amount)
+        self.store.store(key, value, work_amount=work_amount, **kwargs)
