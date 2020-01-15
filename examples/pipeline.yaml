@@ -28,7 +28,7 @@ steps:
     component:
       type: download
     parameters:
-    - url: file:///tmp/data.csv
+    - url: file://data.csv
 
   csv_column:
     description: Load column of CSV file
