@@ -17,11 +17,13 @@ circle.output {
   r: 6px;
   stroke: black;
   fill: grey;
+  pointer-events: auto;
 }
 
 circle.input {
   r: 6px;
   stroke: black;
   fill: yellow;
+  pointer-events: auto;
 }
 </style>

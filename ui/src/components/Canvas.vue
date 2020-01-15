@@ -7,11 +7,13 @@
         v-on:setport="setPort"
         />
     </div>
-    <svg class="canvas">
+    <svg class="canvas ports">
       <Port
         v-for="port in this.ports" :key="port.name"
         :port="port"
         />
+    </svg>
+    <svg class="canvas connections">
       <Connection
         v-for="connection of connections" :key="connection.key"
         :connection="connection.data"
@@ -154,7 +156,12 @@ svg.canvas {
   width: 100%;
 }
 
-svg.canvas g {
-  pointer-events: auto;
+svg.ports {
+  z-index: 14;
+  pointer-events: none;
+}
+
+svg.connections {
+  z-index: 5;
 }
 </style>

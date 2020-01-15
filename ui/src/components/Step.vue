@@ -108,7 +108,8 @@ export default {
   width: 200px;
   border: 1px solid black;
   padding: 6px;
-  z-index: 15;
+  z-index: 10;
+  background-color: white;
 }
 
 .step h2 {
