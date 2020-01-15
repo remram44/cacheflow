@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cacheflow"
-version = "0.1"
+version = "0.2"
 description = "Caching Workflow Engine"
 
 license = "BSD-3-Clause"
