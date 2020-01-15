@@ -43,7 +43,7 @@ class OutputStreams(object):
 class BuiltinPython(Component):
     """Execute Python code in the current interpreter.
     """
-    def execute(self, inputs, output_names, **kwargs):
+    def execute(self, inputs, **kwargs):
         code, = inputs.pop('code')
         local = {}
         for env in inputs.get('env', []):
@@ -63,9 +63,8 @@ class BuiltinPython(Component):
             sys.stdout = old_stdout
             sys.stderr = old_stderr
 
-        for name in output_names:
-            if name != 'env':
-                self.set_output(name, local.get(name))
+        for name, value in local.items():
+            self.set_output(name, value)
         local.pop('__builtins__', None)
         self.set_output('env', local)
         self.set_output('streams', streams.get())

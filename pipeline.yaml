@@ -4,72 +4,72 @@ meta:
   date: 2018-04-18 18:57:16
   description: Example pipeline used during development
 steps:
-- description: Download a web page
-  component:
-    type: download
-  parameters:
-  - url: https://framapiaf.org/@remram44
-  - headers:
-      accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
-  outputs:
-  - file: webpage
-- description: Read web page bytes
-  component:
-    type: script.python
-  parameters:
-  - code: |
-      with open(file.name, 'rb') as fp:
-          contents = fp.read()
-  inputs:
-  - file: webpage
-  outputs:
-  - contents: webpage_bytes
-- description: Get CSV from local file
-  component:
-    type: download
-  parameters:
-  - url: file:///tmp/data.csv
-  outputs:
-  - file: table_file
-- description: Load column of CSV file
-  component:
-    type: script.python
-    version: ">= 3.3"
-    requirements:
-    - pandas
-  parameters:
-  - code: |
-      import numpy
-      import pandas
+  webpage:
+    description: Download a web page
+    component:
+      type: download
+    parameters:
+    - url: https://framapiaf.org/@remram44
+    - headers: 'accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
 
-      df = pandas.read_csv(file.name)
-      ages = numpy.array(df[column])
-  - column: age
-  inputs:
-  - file: table_file
-  outputs:
-  - ages: ages_array
-- description: Print out report
-  component:
-    type: script.python
-  parameters:
-  - code: |
-      report = """\
-      Webpage:
-        Bytes: {0}
-      CSV:
-        Rows: {1}
-        Average: {2}
-        Minimum: {3}
-        Maximum: {4}
-      """.format(
-          len(page),
-          len(ages),
-          ages.mean(),
-          ages.min(),
-          ages.max()
-      )
-      print(report)
-  inputs:
-  - ages: ages_array
-  - page: webpage_bytes
+  webpage_bytes:
+    description: Read web page bytes
+    component:
+      type: script.python
+    parameters:
+    - code: |
+        with open(file.name, 'rb') as fp:
+            contents = fp.read()
+    inputs:
+    - file: webpage.file
+
+  local_csv:
+    description: Get CSV from local file
+    component:
+      type: download
+    parameters:
+    - url: file:///tmp/data.csv
+
+  csv_column:
+    description: Load column of CSV file
+    component:
+      type: script.python
+      version: ">= 3.3"
+      requirements:
+      - pandas
+    parameters:
+    - code: |
+        import numpy
+        import pandas
+
+        df = pandas.read_csv(file.name)
+        ages = numpy.array(df[column])
+    - column: age
+    inputs:
+    - file: local_csv.file
+
+  report:
+    description: Print out report
+    component:
+      type: script.python
+    parameters:
+    - code: |
+        report = """\
+        Webpage:
+          Bytes: {0}
+        CSV:
+          Rows: {1}
+          Average: {2}
+          Minimum: {3}
+          Maximum: {4}
+        """.format(
+            len(page),
+            len(ages),
+            ages.mean(),
+            ages.min(),
+            ages.max()
+        )
+        print(report)
+    inputs:
+    - ages: csv_column.ages
+    - page: webpage_bytes.contents
