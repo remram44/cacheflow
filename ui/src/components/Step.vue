@@ -124,22 +124,18 @@ export default {
 .step table.inputs {
   margin-right: auto;
   padding: 0;
-  border-collapse: collapse;
 }
 
 .step table.inputs tr, .step table.inputs td {
-  height: 32px;
   padding: 0 2px 0 2px;
 }
 
 .step table.outputs {
   margin-left: auto;
   padding: 0;
-  border-collapse: collapse;
 }
 
 .step table.outputs tr, .step table.outputs td {
-  height: 32px;
   padding: 0 2px 0 2px;
 }
 </style>

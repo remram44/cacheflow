@@ -8,9 +8,9 @@
         />
     </div>
     <svg class="canvas">
-      <StepSvg
-        v-for="(step, name) in steps" :key="name"
-        :step="step"
+      <Port
+        v-for="(port, name) in this.portPositions" :key="name"
+        :position="port"
         />
       <Connection
         v-for="connection of connections" :key="connection.key"
@@ -22,7 +22,7 @@
 
 <script>
 import Step from './Step.vue'
-import StepSvg from './StepSvg.vue'
+import Port from './Port.vue'
 import Connection from './Connection.vue'
 import { sortByKey } from '../utils.js'
 
@@ -134,7 +134,7 @@ export default {
   },
   components: {
     Step,
-    StepSvg,
+    Port,
     Connection,
   },
 }
