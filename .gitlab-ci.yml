@@ -1,0 +1,12 @@
+run_tests:
+  stage: test
+  image: python:3.7
+  script:
+    - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python && /root/.poetry/bin/poetry config virtualenvs.create false
+    - $HOME/.poetry/bin/poetry install --no-interaction
+    - python -m readme_renderer README.rst >/dev/null
+    - flake8 --ignore=W504,W601 cacheflow
+    - cacheflow run examples/pipeline.yaml
+    - cacheflow run examples/pipeline.yaml
+    - noteflow examples/notebook.cfnb
+    - noteflow examples/notebook.cfnb

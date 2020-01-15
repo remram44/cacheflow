@@ -47,6 +47,8 @@ cloudpickle = "^1.2"
 
 [tool.poetry.dev-dependencies]
 pandas = "^0.25.3"
+readme_renderer = "*"
+flake8 = "*"
 
 [tool.poetry.scripts]
 cacheflow = "cacheflow.cli:main"
