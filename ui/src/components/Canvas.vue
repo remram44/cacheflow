@@ -1,7 +1,11 @@
 <template>
   <div>
     <div class="canvas">
-      <Step v-for="(step, name) in steps" :key="name" :step="step" :name="name"/>
+      <Step
+        v-for="(step, name) in steps" :key="name"
+        :step="step" :name="name"
+        v-on:portposition="setPortPosition"
+        />
     </div>
     <svg class="canvas">
       <StepSvg
@@ -50,6 +54,7 @@ export default {
           outputs: ["plot"],
         },
       },
+      portPositions: {},
     };
   },
   computed: {
@@ -92,16 +97,18 @@ export default {
           for(let source of input_array) {
             if(!(typeof source == "string")) {
               // Compute position of source output port
-              let source_step = this.steps[source.step];
-              let sx = source_step.position[0] + 212;
-              let sy = source_step.position[1] + 55;
-              sy += step_output_index[source.step][source.output] * 32;
+              let sx = 0, sy = 0;
+              let skey = `${source.step}.out.${source.output}`;
+              if(skey in this.portPositions) {
+                [sx, sy] = this.portPositions[skey];
+              }
 
               // Compute position of destination input port
-              let dx = step.position[0];
-              let dy = step.position[1] + 55;
-              dy += step_output_count[step_id] * 32;
-              dy += step_input_index[step_id][input_name] * 32;
+              let dx = 0, dy = 0;
+              let dkey = `${step_id}.in.${input_name}`;
+              if(dkey in this.portPositions) {
+                [dx, dy] = this.portPositions[dkey];
+              }
 
               // Add connection to array
               connections.push({
@@ -116,11 +123,13 @@ export default {
     },
   },
   methods: {
-    outputY: function(step, idx) {
-      return step.position[1] + 48 + 25 * idx;
-    },
-    inputY: function(step, idx) {
-      return step.position[1] + 48 + 25 * step.outputs.length + 25 * idx;
+    setPortPosition: function(evt) {
+      let {port, position} = evt;
+      if(position !== undefined) {
+        this.$set(this.portPositions, port, position);
+      } else {
+        this.$delete(this.portPositions, port);
+      }
     },
   },
   components: {

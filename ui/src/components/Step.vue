@@ -39,6 +39,60 @@ export default {
       return `left: ${this.step.position[0]}px; top: ${this.step.position[1]}px;`;
     },
   },
+  methods: {
+    updatePortPositions: function() {
+      let output_rows = this.$el.querySelectorAll(".outputs tr");
+      for(let i = 0; i < output_rows.length; ++i) {
+        let rect = output_rows[i].getBoundingClientRect();
+        this.$emit(
+          'portposition',
+          {
+            port: `${this.name}.out.${this.step.outputs[i]}`,
+            position: [rect.right + 6, (rect.top + rect.bottom) / 2],
+          },
+        );
+      }
+
+      let input_rows = this.$el.querySelectorAll(".inputs tr");
+      for(let i = 0; i < input_rows.length; ++i) {
+        let rect = input_rows[i].getBoundingClientRect();
+        this.$emit(
+          'portposition',
+          {
+            port: `${this.name}.in.${this.inputs[i][0]}`,
+            position: [rect.left - 6, (rect.top + rect.bottom) / 2],
+          },
+        );
+      }
+    },
+  },
+  mounted: function() {
+    this.$nextTick(this.updatePortPositions);
+  },
+  updated: function() {
+    this.$nextTick(this.updatePortPositions);
+  },
+  beforeDestroy: function() {
+    for(let output of this.step.outputs) {
+      this.$emit(
+        'portposition',
+        {
+          port: `${this.name}.out.${output}`,
+          position: undefined,
+        },
+      );
+    }
+
+    for(let input of this.inputs) {
+      this.$emit(
+        'portposition',
+        {
+          port: `${this.name}.in.${input[0]}`,
+          position: undefined,
+        },
+      );
+    }
+  },
 }
 </script>
 
