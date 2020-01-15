@@ -6,8 +6,8 @@ from . import __version__
 from .builtin_components import BuiltinComponentsLoader
 from .cache import DirectoryCache
 from .executor import Executor
-from .json import load_workflow
 from .python import BuiltinPythonLoader
+from .storage.json import load_workflow
 
 
 def main():

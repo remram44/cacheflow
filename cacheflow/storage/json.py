@@ -1,6 +1,6 @@
 import yaml
 
-from .base import Workflow, Step, Connection
+from ..base import Workflow, Step, Connection
 
 
 __all__ = ['load_workflow']
