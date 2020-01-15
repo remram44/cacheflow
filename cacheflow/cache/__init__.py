@@ -1,5 +1,12 @@
 from .base import Cache
-from .core import NullCache, MemoryCache, DirectoryCache
+from .core import NullCache, MemoryCache, DirectoryCache, \
+    Pickling, TemporaryFile, hash_value
+
+
+__all__ = [
+    'Cache', 'NullCache', 'MemoryCache', 'DirectoryCache',
+    'Pickling', 'TemporaryFile', 'hash_value',
+]
 
 
 class SmartCache(Cache):
@@ -7,7 +14,9 @@ class SmartCache(Cache):
 
     A decision to store inputs or not is made depending on:
 
-      * 
+      * The value's size
+      * The computational cost of re-computing the value
+      * How often/recently the value was requested from the cache
     """
     def __init__(self, store):
         self.store = store

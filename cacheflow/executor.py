@@ -144,7 +144,10 @@ class Executor(object):
                 logger.info("Executing step %r", step.id)
                 try:
                     component.execute(
-                        inputs={n: [e[0] for e in v] for n, v in inputs.items()},
+                        inputs={
+                            n: [e[0] for e in v]
+                            for n, v in inputs.items()
+                        },
                         temp_dir=temp_dir, globals=globals,
                         cache=internal_cache,
                     )
