@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import sys
 
 from . import __version__
@@ -45,6 +46,9 @@ def run(args):
     with open(args.workflow) as fp:
         workflow = load_workflow(fp)
 
-    executor = Executor(DirectoryCache('_cf_cache'),
+    cache_loc = os.path.abspath('_cf_cache')
+    os.chdir(os.path.dirname(args.workflow))
+
+    executor = Executor(DirectoryCache(cache_loc),
                         [BuiltinPythonLoader(), BuiltinComponentsLoader()])
     executor.execute(workflow)
