@@ -159,7 +159,6 @@ class Unpickler(pickle.Unpickler):
         return super(Unpickler, self).find_class(module, name)
 
     def _tempfile_builder(self, *args):
-        print(args)
         suffix, contents = args
         obj = TemporaryFile(temp_dir=self.__temp_dir, suffix=suffix)
         with open(obj.name, 'wb') as fp:
