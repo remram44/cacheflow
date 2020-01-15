@@ -4,13 +4,13 @@
       <Step
         v-for="(step, name) in steps" :key="name"
         :step="step" :name="name"
-        v-on:portposition="setPortPosition"
+        v-on:setport="setPort"
         />
     </div>
     <svg class="canvas">
       <Port
-        v-for="(port, name) in this.portPositions" :key="name"
-        :position="port"
+        v-for="port in this.ports" :key="port.name"
+        :port="port"
         />
       <Connection
         v-for="connection of connections" :key="connection.key"
@@ -54,7 +54,7 @@ export default {
           outputs: ["plot"],
         },
       },
-      portPositions: {},
+      ports: {},
     };
   },
   computed: {
@@ -99,15 +99,15 @@ export default {
               // Compute position of source output port
               let sx = 0, sy = 0;
               let skey = `${source.step}.out.${source.output}`;
-              if(skey in this.portPositions) {
-                [sx, sy] = this.portPositions[skey];
+              if(skey in this.ports) {
+                [sx, sy] = this.ports[skey].position;
               }
 
               // Compute position of destination input port
               let dx = 0, dy = 0;
               let dkey = `${step_id}.in.${input_name}`;
-              if(dkey in this.portPositions) {
-                [dx, dy] = this.portPositions[dkey];
+              if(dkey in this.ports) {
+                [dx, dy] = this.ports[dkey].position;
               }
 
               // Add connection to array
@@ -123,12 +123,11 @@ export default {
     },
   },
   methods: {
-    setPortPosition: function(evt) {
-      let {port, position} = evt;
-      if(position !== undefined) {
-        this.$set(this.portPositions, port, position);
+    setPort: function(port) {
+      if(port.position !== undefined) {
+        this.$set(this.ports, port.name, port);
       } else {
-        this.$delete(this.portPositions, port);
+        this.$delete(this.ports, port.name);
       }
     },
   },

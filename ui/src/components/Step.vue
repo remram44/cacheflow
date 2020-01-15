@@ -41,25 +41,29 @@ export default {
   },
   methods: {
     updatePortPositions: function() {
+      // Send output port information
       let output_rows = this.$el.querySelectorAll(".outputs tr");
       for(let i = 0; i < output_rows.length; ++i) {
         let rect = output_rows[i].getBoundingClientRect();
         this.$emit(
-          'portposition',
+          'setport',
           {
-            port: `${this.name}.out.${this.step.outputs[i]}`,
+            name: `${this.name}.out.${this.step.outputs[i]}`,
+            type: 'output',
             position: [rect.right + 6, (rect.top + rect.bottom) / 2],
           },
         );
       }
 
+      // Send input port information
       let input_rows = this.$el.querySelectorAll(".inputs tr");
       for(let i = 0; i < input_rows.length; ++i) {
         let rect = input_rows[i].getBoundingClientRect();
         this.$emit(
-          'portposition',
+          'setport',
           {
-            port: `${this.name}.in.${this.inputs[i][0]}`,
+            name: `${this.name}.in.${this.inputs[i][0]}`,
+            type: 'input',
             position: [rect.left - 6, (rect.top + rect.bottom) / 2],
           },
         );
@@ -73,21 +77,23 @@ export default {
     this.$nextTick(this.updatePortPositions);
   },
   beforeDestroy: function() {
+    // Destroy output ports
     for(let output of this.step.outputs) {
       this.$emit(
-        'portposition',
+        'setport',
         {
-          port: `${this.name}.out.${output}`,
+          name: `${this.name}.out.${output}`,
           position: undefined,
         },
       );
     }
 
+    // Destroy input ports
     for(let input of this.inputs) {
       this.$emit(
-        'portposition',
+        'setport',
         {
-          port: `${this.name}.in.${input[0]}`,
+          name: `${this.name}.in.${input[0]}`,
           position: undefined,
         },
       );
@@ -124,6 +130,7 @@ export default {
 .step table.inputs {
   margin-right: auto;
   padding: 0;
+  border-collapse: collapse;
 }
 
 .step table.inputs tr, .step table.inputs td {
@@ -133,6 +140,7 @@ export default {
 .step table.outputs {
   margin-left: auto;
   padding: 0;
+  border-collapse: collapse;
 }
 
 .step table.outputs tr, .step table.outputs td {

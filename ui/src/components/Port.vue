@@ -1,14 +1,14 @@
 <template>
   <circle
-    :cx="position[0]"
-    :cy="position[1]"
-    class="input"
+    :cx="port.position[0]"
+    :cy="port.position[1]"
+    :class="port.type"
     />
 </template>
 
 <script>
 export default {
-  props: ['position'],
+  props: ['port'],
 }
 </script>
 
