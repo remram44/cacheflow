@@ -41,52 +41,35 @@ class ComponentLoader(object):
 
 
 class Workflow(object):
-    # TODO: Add more indexes in here (connection from step, ...)
-    # TODO: Provide an abstract base for this too (for SQL backend)
-    def __init__(self, steps, connections, meta):
+    def __init__(self, steps, meta):
         self.steps = steps
-        self.connections = connections
         self.meta = meta
 
     def __repr__(self):
-        return '<Workflow\n  steps:{}\n  connections:{}\n  meta={!r}>'.format(
+        return '<Workflow\n  steps:{}\n  meta={!r}>'.format(
             ''.join('\n    {!r}'.format(s) for s in self.steps.values()),
-            ''.join('\n    {!r}'.format(c) for c in self.connections.values()),
             self.meta,
         )
 
 
+class StepInputConnection(object):
+    def __init__(self, source_step_id, source_output_name):
+        self.source_step_id = source_step_id
+        self.source_output_name = source_output_name
+
+    def __repr__(self):
+        return '%s.%s' % (self.source_step_id, self.source_output_name)
+
+
 class Step(object):
-    def __init__(self, id, component_def, inputs, outputs, parameters):
+    def __init__(self, id, component_def, inputs):
         self.id = id
         self.component_def = component_def
         self.inputs = inputs
-        self.outputs = outputs
-        self.parameters = parameters
 
     def __repr__(self):
-        return '<Step {!r} inputs={!r} outputs={!r} parameters={!r}>'.format(
+        return '<Step {!r} type={!r} inputs={{{}}}>'.format(
             self.id,
-            sorted(self.inputs),
-            sorted(self.outputs),
-            list(self.parameters),
-        )
-
-
-class Connection(object):
-    def __init__(self, id,
-                 from_step_id, from_output_name, to_step_id, to_input_name):
-        self.id = id
-        self.from_step_id = from_step_id
-        self.from_output_name = from_output_name
-        self.to_step_id = to_step_id
-        self.to_input_name = to_input_name
-
-    def __repr__(self):
-        return '<Connection {!r} {!r}.{!r} --> {!r}.{!r}>'.format(
-            self.id,
-            self.from_step_id,
-            self.from_output_name,
-            self.to_step_id,
-            self.to_input_name,
+            self.component_def.get('type'),
+            ', '.join('%s=%r' % p for p in sorted(self.inputs.items())),
         )

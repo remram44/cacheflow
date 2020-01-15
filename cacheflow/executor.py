@@ -2,6 +2,7 @@ import logging
 import shutil
 import tempfile
 
+from .base import StepInputConnection
 from .cache.core import hash_value, UNHASHABLE, Pickling
 
 
@@ -58,16 +59,6 @@ class Executor(object):
         if globals is None:
             globals = {}
 
-        # Compute dependency map
-        # TODO: Just have this in Workflow
-        wf_dependencies = {step_id: set() for step_id in workflow.steps}
-        for conn in workflow.connections.values():
-            wf_dependencies[conn.to_step_id].add((
-                conn.from_step_id,
-                conn.from_output_name,
-                conn.to_input_name,
-            ))
-
         if sinks is not None:
             e = {}
             sinks = {step_id: e for step_id in sinks}
@@ -90,18 +81,29 @@ class Executor(object):
                 step = workflow.steps[step_id]
                 # Load component
                 component = self.load_component(step.component_def, pickling)
-                steps[step.id] = (
-                    component,
-                    hash_dict_list(step.parameters, pickling),
-                )
-                # Record dependencies
+                steps[step.id] = component, {}
+
+                # Process inputs
                 dependencies[step.id] = deps = set()
-                for s, o, i in wf_dependencies[step.id]:
-                    deps.add(s)
-                    dependents.setdefault(s, []).append((o, step.id, i))
-                    if s not in closed_steps:
-                        open_steps.append(s)
-                dependencies[step.id] = deps
+                for name, inputs in step.inputs.items():
+                    for input in inputs:
+                        if isinstance(input, StepInputConnection):
+                            # Input is a connection: record the dependency
+                            deps.add(input.source_step_id)
+                            dependents \
+                                .setdefault(input.source_step_id, []) \
+                                .append((
+                                    input.source_output_name,
+                                    step.id,
+                                    name,
+                                ))
+                            if input.source_step_id not in closed_steps:
+                                open_steps.append(input.source_step_id)
+                        else:
+                            # Input is a constant, hash it, store it
+                            steps[step.id][1].setdefault(name, []).append((
+                                input, hash_value(input, pickling),
+                            ))
 
         logger.info("Loaded %d components", len(steps))
 
@@ -143,7 +145,6 @@ class Executor(object):
                 try:
                     component.execute(
                         inputs={n: [e[0] for e in v] for n, v in inputs.items()},
-                        output_names=step.outputs,
                         temp_dir=temp_dir, globals=globals,
                         cache=internal_cache,
                     )

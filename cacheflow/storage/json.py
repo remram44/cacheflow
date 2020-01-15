@@ -1,79 +1,117 @@
 import yaml
 
-from ..base import Workflow, Step, Connection
+from ..base import Workflow, Step, StepInputConnection
 
 
 __all__ = ['load_workflow']
 
 
-def check_keys(obj, allowed_keys):
-    keys = set(obj)
-    keys.difference_update(allowed_keys)
-    if keys:
-        raise ValueError("Unrecognized keys: %s" % ', '.join(sorted(keys)))
+class InvalidWorkflowJson(ValueError):
+    """Workflow JSON is invalid.
+    """
+
+
+def check_keys(obj, required, optional, msg=''):
+    if msg:
+        msg = "%s: "
+    if not isinstance(obj, dict):
+        raise InvalidWorkflowJson(
+            "%sExpected 'dict', got %r" % (msg, type(obj))
+        )
+    unknown_keys = set(obj)
+    unknown_keys.difference_update(required)
+    unknown_keys.difference_update(optional)
+    if unknown_keys:
+        raise InvalidWorkflowJson(
+            "%sUnrecognized keys: %s" % (
+                msg,
+                ', '.join(sorted(unknown_keys)),
+            )
+        )
+    missing_keys = set(required)
+    missing_keys.difference_update(obj)
+    if missing_keys:
+        raise InvalidWorkflowJson(
+            "%sMissing required keys: %s" % (
+                msg, ', '.join(sorted(missing_keys))
+            )
+        )
 
 
 def load_workflow(fileobj):
     """Loads a workflow from a JSON file.
     """
-    obj = yaml.safe_load(fileobj)
+    try:
+        obj = yaml.safe_load(fileobj)
+    except yaml.YAMLError:
+        raise InvalidWorkflowJson("Invalid YAML")
 
-    check_keys(obj, ['meta', 'steps'])
+    check_keys(obj, ['steps'], ['meta'])
 
     steps = {}
-    connections = {}
-    input_refs = []
-    output_refs = {}
-    for step in obj['steps']:
-        check_keys(step, ['component', 'inputs', 'outputs', 'parameters',
-                          'description'])
-        step_id = len(steps)
-
-        # Read inputs, which can also have the target of a connection
-        inputs = set()
-        for input in step.get('inputs', []):
-            if isinstance(input, dict):
-                [(name, ref)] = input.items()
-                inputs.add(name)
-                input_refs.append((step_id, name, ref))
-            elif isinstance(input, str):
-                inputs.add(input)
-            else:
-                raise ValueError("Invalid input")
-
-        # Read outputs, which can also have a ref name for connection
-        outputs = set()
-        for output in step.get('outputs', []):
-            if isinstance(output, dict):
-                [(name, ref)] = output.items()
-                outputs.add(name)
-                if ref in output_refs:
-                    raise ValueError("Duplicate output reference %s" % ref)
-                output_refs[ref] = step_id, name
-            else:
-                raise ValueError("Invalid output")
-
-        # Read parameters
-        parameters = {}
-        for param in step.get('parameters', []):
-            if not isinstance(param, dict):
-                raise ValueError("Invalid parameter")
-            [(name, value)] = param.items()
-            parameters.setdefault(name, []).append(value)
-
-        # Store step
-        steps[step_id] = Step(step_id, step['component'], inputs, outputs,
-                              parameters)
-
-    # Store connections
-    for to_step_id, to_input_name, ref in input_refs:
-        from_step_id, from_output_name = output_refs[ref]
-        connections[len(connections)] = Connection(
-            len(connections),
-            from_step_id,
-            from_output_name,
-            to_step_id,
-            to_input_name,
+    not_sink_steps = set()
+    for step_id, step in obj['steps'].items():
+        check_keys(
+            step,
+            ['component'],
+            ['inputs', 'outputs', 'parameters', 'description'],
+            "Step %r" % step_id,
         )
 
-    return Workflow(steps, connections, obj.get('meta', {}))
+        inputs = {}
+
+        # Read parameters
+        for i, param in enumerate(step.get('parameters', [])):
+            if not isinstance(param, dict):
+                raise InvalidWorkflowJson(
+                    "Step %r: Parameter #%d: not a dict" % (step_id, i)
+                )
+            if len(param) != 1:
+                raise InvalidWorkflowJson(
+                    "Step %r: Parameter #%d: "
+                    "invalid dict size (should be 1)" % (step_id, i)
+                )
+            [(name, value)] = param.items()
+            if not isinstance(value, str):
+                raise InvalidWorkflowJson(
+                    "Step %r: Parameter #%d (%r): value not a string" % (
+                        step_id, i, name,
+                    ),
+                )
+            inputs.setdefault(name, []).append(value)
+
+        # Read inputs
+        has_inputs = False
+        for i, input in enumerate(step.get('inputs', [])):
+            if not isinstance(input, dict):
+                raise InvalidWorkflowJson(
+                    "Step %r: Input #%d: not a dict" % (step_id, i)
+                )
+            if len(input) != 1:
+                raise InvalidWorkflowJson(
+                    "Step %r: Input #%d: "
+                    "invalid dict size (should be 1)" % (step_id, i)
+                )
+            [(name, ref)] = input.items()
+            if '.' not in ref:
+                raise InvalidWorkflowJson(
+                    "Step %r: Input #%d (%r): "
+                    "invalid input reference (should be <step>.<output>)" % (
+                        step_id, i, name,
+                    )
+                )
+            source_step_id, source_output_name = ref.split('.', 1)
+            inputs.setdefault(name, []).append(
+                StepInputConnection(
+                    source_step_id, source_output_name,
+                )
+            )
+            has_inputs = True
+
+        if has_inputs:
+            not_sink_steps.add(step_id)
+
+        # Store step
+        steps[step_id] = Step(step_id, step['component'], inputs)
+
+    return Workflow(steps, obj.get('meta', {}))

@@ -6,7 +6,7 @@ import re
 import sys
 import yaml
 
-from .base import Step, Connection, Workflow
+from .base import Step, Workflow, StepInputConnection
 
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,6 @@ class WorkflowStep(Section):
         super(WorkflowStep, self).__init__(id)
         self.step = step
         self.lines = lines
-        self.inputs = {'env'}
-        self.outputs = {'env', 'stream'}
 
     def render_html(self, workflow_results, **kwargs):
         streams = workflow_results[self.id].get('streams')
@@ -58,34 +56,18 @@ class Noteflow(object):
         self.sections = sections
 
         steps = {}
-        outputs = {}
-        connections = {}
+        last_id = None
         for section in sections:
             if isinstance(section, WorkflowStep):
                 # Create step
-                step = Step(section.id, section.step,
-                            section.inputs, section.outputs,
-                            {'code': [''.join(section.lines)]})
+                inputs = {'code': [''.join(section.lines)]}
+                if last_id is not None:
+                    inputs['env'] = [StepInputConnection(last_id, 'env')]
+                step = Step(section.id, section.step, inputs)
                 steps[step.id] = step
+                last_id = section.id
 
-                # Create connections
-                for ref in section.inputs:
-                    try:
-                        from_step_id = outputs[ref]
-                    except KeyError:
-                        continue
-                    else:
-                        connections[len(connections)] = Connection(
-                            len(connections),
-                            from_step_id,
-                            ref,
-                            step.id,
-                            ref,
-                        )
-                for ref in section.outputs:
-                    outputs[ref] = step.id
-
-        self.workflow = Workflow(steps, connections, meta)
+        self.workflow = Workflow(steps, meta)
 
 
 _re_step_start = re.compile(r'^``` *(\{.*\}) *$')
@@ -107,7 +89,7 @@ def load_noteflow(fileobj):
                 if _re_step_end.match(line) is not None:
                     break
                 code.append(line)
-            sections.append(WorkflowStep(len(sections), step, code))
+            sections.append(WorkflowStep('cell%d' % len(sections), step, code))
         else:
             lines.append(line)
 

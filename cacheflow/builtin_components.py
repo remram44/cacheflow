@@ -20,7 +20,10 @@ class Download(Component):
     """
     def execute(self, inputs, temp_dir, **kwargs):
         url, = inputs['url']
-        headers, = inputs.get('headers', (None,))
+        headers = {}
+        for header in inputs.get('headers', ()):
+            name, value = header.split(':', 1)
+            headers[name.strip()] = value.strip()
 
         # Create file with correct extension
         path = urlparse(url).path

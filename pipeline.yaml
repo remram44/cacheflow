@@ -10,8 +10,7 @@ steps:
       type: download
     parameters:
     - url: https://framapiaf.org/@remram44
-    - headers:
-        accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"
+    - headers: 'accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
 
   webpage_bytes:
     description: Read web page bytes
