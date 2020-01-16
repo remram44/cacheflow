@@ -106,10 +106,15 @@ export default {
 .step {
   position: absolute;
   width: 200px;
-  border: 1px solid black;
+  border: 2px solid black;
+  border-radius: 15px;
   padding: 6px;
   z-index: 10;
   background-color: white;
+}
+
+.step * {
+  pointer-events: none;
 }
 
 .step h2 {
@@ -126,6 +131,7 @@ export default {
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 .step table.inputs {
