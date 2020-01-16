@@ -1,0 +1,10 @@
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - "cp -r index.html css js favicon.ico public/"
+  artifacts:
+    paths:
+      - public
+  only:
+    - gl-pages
