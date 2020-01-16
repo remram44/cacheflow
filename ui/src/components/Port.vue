@@ -1,7 +1,6 @@
 <template>
   <circle
-    :cx="port.position[0]"
-    :cy="port.position[1]"
+    :cx="port.position[0]" :cy="port.position[1]"
     :class="port.type"
     />
 </template>

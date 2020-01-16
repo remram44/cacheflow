@@ -1,6 +1,10 @@
 <template>
-  <div class="step" :style=style>
-    <h2>{{name}}</h2>
+  <div
+    class="step" :style=style
+    v-on:mousedown.left.self.prevent="mousedown"
+    >
+    <a class="close" v-on:click.self.prevent="remove">[x]</a>
+    <h2>{{step.component.type}}</h2>
     <table class="outputs">
       <tr v-for="output of step.outputs" :key="output">
         <td>???</td>
@@ -40,7 +44,7 @@ export default {
     },
   },
   methods: {
-    updatePortPositions: function() {
+    sendUpdate: function() {
       // Send output port information
       let output_rows = this.$el.querySelectorAll(".outputs tr");
       for(let i = 0; i < output_rows.length; ++i) {
@@ -69,14 +73,41 @@ export default {
         );
       }
     },
+    mousedown: function(event) {
+      document.addEventListener('mouseup', this.mouseup);
+      document.addEventListener('mousemove', this.mousemove);
+      this.offset = [
+        this.step.position[0] - event.clientX,
+        this.step.position[1] - event.clientY,
+      ];
+    },
+    mouseup: function() {
+      document.removeEventListener('mouseup', this.mouseup);
+      document.removeEventListener('mousemove', this.mousemove);
+      this.$emit('stepmove', {name: this.name, position: this.step.position});
+    },
+    mousemove: function(event) {
+      event.preventDefault();
+      this.step.position = [
+        event.clientX + this.offset[0],
+        event.clientY + this.offset[1],
+      ];
+    },
+    remove: function() {
+      this.$emit("remove");
+    },
   },
   mounted: function() {
-    this.$nextTick(this.updatePortPositions);
+    this.$nextTick(this.sendUpdate);
   },
   updated: function() {
-    this.$nextTick(this.updatePortPositions);
+    this.$nextTick(this.sendUpdate);
   },
   beforeDestroy: function() {
+    // Remove event listeners
+    document.removeEventListener('mousemove', this.mousemoved);
+    document.removeEventListener('mouseup', this.mouseup);
+
     // Destroy output ports
     for(let output of this.step.outputs) {
       this.$emit(
@@ -152,5 +183,12 @@ export default {
 
 .step table.outputs tr, .step table.outputs td {
   padding: 0 2px 0 2px;
+}
+
+a.close {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  pointer-events: auto;
 }
 </style>

@@ -2,9 +2,11 @@
   <div>
     <div class="canvas">
       <Step
-        v-for="(step, name) in steps" :key="name"
+        v-for="(step, name) in workflow.steps" :key="name"
         :step="step" :name="name"
         v-on:setport="setPort"
+        v-on:stepmove="moveStep"
+        v-on:remove="removeStep(name)"
         />
     </div>
     <svg class="canvas ports">
@@ -29,33 +31,9 @@ import Connection from './Connection.vue'
 import { sortByKey } from '../utils.js'
 
 export default {
+  props: ['workflow'],
   data: function() {
     return {
-      steps: {
-        dataset: {
-          component: {
-            type: "dataset"
-          },
-          position: [100, 100],
-          inputs: {
-            name: ["age.csv"],
-          },
-          outputs: ["table"],
-        },
-        plot: {
-          component: {
-            type: "plot"
-          },
-          position: [350, 150],
-          inputs: {
-            table: [{step: "dataset", output: "table"}],
-            x: ["name"],
-            y: ["age"],
-            style: [],
-          },
-          outputs: ["plot"],
-        },
-      },
       ports: {},
     };
   },
@@ -65,8 +43,8 @@ export default {
       let step_output_index = {};
       let step_output_count = {};
       let step_input_index = {};
-      for(let step_id in this.steps) {
-        let step = this.steps[step_id];
+      for(let step_id in this.workflow.steps) {
+        let step = this.workflow.steps[step_id];
 
         // Index outputs
         {
@@ -92,8 +70,8 @@ export default {
 
       // For each step, for each of its input, for each of its connection
       let connections = [];
-      for(let step_id in this.steps) {
-        let step = this.steps[step_id];
+      for(let step_id in this.workflow.steps) {
+        let step = this.workflow.steps[step_id];
         for(let input_name in step.inputs) {
           let input_array = step.inputs[input_name];
           for(let source of input_array) {
@@ -131,6 +109,12 @@ export default {
       } else {
         this.$delete(this.ports, port.name);
       }
+    },
+    moveStep: function(e) {
+      this.$emit('stepmove', e);
+    },
+    removeStep: function(name) {
+      this.$emit('stepremove', name);
     },
   },
   components: {
