@@ -14,7 +14,13 @@
     <table class="inputs">
       <tr v-for="input of inputs" :key="input[0]">
         <td>{{input[0]}}</td>
-        <td><input type="text" v-if="input[1] !== null" :value="input[1]"/></td>
+        <td>
+          <input
+            type="text" v-if="input[1] !== null"
+            :value="input[1]"
+            v-on:change="changeInput(input[0], $event)"
+            />
+        </td>
       </tr>
     </table>
   </div>
@@ -74,6 +80,10 @@ export default {
           },
         );
       }
+    },
+    changeInput: function(input_name, event) {
+      // TODO: Notify of input change
+      console.log("Step ", this.name, " input ", input_name, " changed to ", event.target.value);
     },
     mousedown: function(event) {
       document.addEventListener('mouseup', this.mouseup);
