@@ -7,6 +7,7 @@
 
 <script>
 export default {
+  name: 'Port',
   props: ['port'],
 }
 </script>

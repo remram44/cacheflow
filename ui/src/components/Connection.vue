@@ -4,6 +4,7 @@
 
 <script>
 export default {
+  name: 'Connection',
   props: ['connection'],
   computed: {
     path: function() {

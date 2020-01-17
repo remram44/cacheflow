@@ -17,7 +17,7 @@ import Library from './components/Library.vue'
 import { uuid4 } from './utils.js'
 
 export default {
-  name: 'app',
+  name: 'App',
   data: function() {
     return {
       workflow: {

@@ -13,6 +13,7 @@
 
 <script>
 export default {
+  name: 'Library',
   data: function() {
     return {
       components: [
@@ -56,8 +57,13 @@ export default {
 }
 
 .library>div>div {
-  border: 1px solid #ccc;
+  border: 1px solid #aaa;
   padding: 5px;
+  background-color: white;
+}
+
+.library h1 {
+  font-size: 1.8rem;
 }
 
 .library p {

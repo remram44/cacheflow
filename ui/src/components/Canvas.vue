@@ -31,6 +31,7 @@ import Connection from './Connection.vue'
 import { sortByKey } from '../utils.js'
 
 export default {
+  name: 'Canvas',
   props: ['workflow'],
   data: function() {
     return {
@@ -130,6 +131,7 @@ div.canvas {
   position: absolute;
   width: 100%;
   height: 100%;
+  background-color: #eee;
 }
 
 svg.canvas {
