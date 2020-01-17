@@ -54,6 +54,7 @@ export default {
           {
             name: `${this.name}.out.${this.step.outputs[i]}`,
             type: 'output',
+            step: this.name, port_name: this.step.outputs[i],
             position: [rect.right + 6, (rect.top + rect.bottom) / 2],
           },
         );
@@ -68,6 +69,7 @@ export default {
           {
             name: `${this.name}.in.${this.inputs[i][0]}`,
             type: 'input',
+            step: this.name, port_name: this.inputs[i][0],
             position: [rect.left - 6, (rect.top + rect.bottom) / 2],
           },
         );

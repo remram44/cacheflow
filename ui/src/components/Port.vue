@@ -2,6 +2,7 @@
   <circle
     :cx="port.position[0]" :cy="port.position[1]"
     :class="port.type"
+    v-on:mousedown.left.self.prevent="mousedown"
     />
 </template>
 
@@ -9,6 +10,15 @@
 export default {
   name: 'Port',
   props: ['port'],
+  methods: {
+    mousedown: function() {
+      if(this.port.type == 'output') {
+        this.$emit('startconnection', this.port.name);
+      } else {
+        this.$emit('grabconnection', this.port.name);
+      }
+    },
+  },
 }
 </script>
 

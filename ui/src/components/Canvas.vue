@@ -13,12 +13,18 @@
       <Port
         v-for="port in this.ports" :key="port.name"
         :port="port"
+        v-on:startconnection="startConnection"
+        v-on:grabconnection="grabConnection"
         />
     </svg>
     <svg class="canvas connections">
       <Connection
         v-for="connection of connections" :key="connection.key"
         :source="connection.source" :dest="connection.dest"
+        />
+      <Connection
+        v-if="newConnection != null"
+        :source="newConnection.source" :dest="newConnection.dest"
         />
     </svg>
   </div>
@@ -36,6 +42,7 @@ export default {
   data: function() {
     return {
       ports: {},
+      newConnection: null,
     };
   },
   computed: {
@@ -94,6 +101,8 @@ export default {
               // Add connection to array
               connections.push({
                 key: `${skey}.${dkey}`,
+                source_step: source.step, source_output: source.output,
+                dest_step: step_id, dest_input: input_name,
                 source: spos, dest: dpos,
               });
             }
@@ -117,6 +126,91 @@ export default {
     removeStep: function(name) {
       this.$emit('stepremove', name);
     },
+    startConnection: function(port_name) {
+      let source_port = this.ports[port_name];
+      this.newConnection = {
+        key: `${port_name}.`,
+        source_step: source_port.step, source_output: source_port.port_name,
+        source: source_port.position,
+        dest: [event.clientX, event.clientY],
+      };
+      document.addEventListener('mouseup', this.connectionMouseUp);
+      document.addEventListener('mousemove', this.connectionMouseMove);
+    },
+    grabConnection: function(port_name) {
+      let source_port = null;
+      for(let conn of this.connections) {
+        if(`${conn.dest_step}.in.${conn.dest_input}` == port_name) {
+          // Delete that connection
+          let inputs = this.workflow.steps[conn.dest_step].inputs[conn.dest_input];
+          for(let i = 0; i < inputs.length; ++i) {
+            if(typeof inputs[i] == "string") {
+              continue;
+            } else if(
+              inputs[i].step == conn.source_step &&
+              inputs[i].output == conn.source_output
+            ) {
+              inputs.splice(i, 1);
+              // TODO: Notify of removed connection
+              console.log("Removed connection");
+              break;
+            }
+          }
+
+          // Make new connection from source port
+          source_port = `${conn.source_step}.out.${conn.source_output}`;
+
+          break;
+        }
+      }
+      if(source_port !== null) {
+        this.startConnection(source_port);
+      }
+    },
+    connectionMouseUp: function(event) {
+      document.removeEventListener('mouseup', this.connectionMouseUp);
+      document.removeEventListener('mousemove', this.connectionMouseMove);
+
+      // Find closest port
+      let min_port = null;
+      let min_sqdist = 150;
+      for(let port_name in this.ports) {
+        let port = this.ports[port_name];
+        if(port.type != 'input') {
+          continue;
+        }
+        let dx = port.position[0] - event.clientX;
+        let dy = port.position[1] - event.clientY;
+        let sqdist = dx * dx + dy * dy;
+        if(sqdist < min_sqdist) {
+          min_sqdist = sqdist;
+          min_port = port;
+        }
+      }
+
+      if(min_port !== null) {
+        this.workflow.steps[min_port.step].inputs[min_port.port_name] = [{
+          step: this.newConnection.source_step,
+          output: this.newConnection.source_output,
+        }];
+        // TODO: Notify of new connection (and removed old inputs)
+        console.log(
+          "New connection ",
+          `${this.newConnection.source_step}.${this.newConnection.source_output} - ` +
+          `${min_port.step}.${min_port.port_name}`,
+        );
+      }
+
+      this.newConnection = null
+    },
+    connectionMouseMove: function(event) {
+      this.newConnection.dest = [event.clientX, event.clientY];
+    },
+  },
+  beforeDestroy: function() {
+    // Remove event listeners
+    document.removeEventListener('mouseup', this.connectionMouseUp);
+    document.removeEventListener('mousemove', this.connectionMouseMove);
   },
   components: {
     Step,
