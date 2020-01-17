@@ -18,7 +18,7 @@
     <svg class="canvas connections">
       <Connection
         v-for="connection of connections" :key="connection.key"
-        :connection="connection.data"
+        :source="connection.source" :dest="connection.dest"
         />
     </svg>
   </div>
@@ -77,24 +77,24 @@ export default {
           let input_array = step.inputs[input_name];
           for(let source of input_array) {
             if(!(typeof source == "string")) {
-              // Compute position of source output port
-              let sx = 0, sy = 0;
+              // Get position of source output port
               let skey = `${source.step}.out.${source.output}`;
-              if(skey in this.ports) {
-                [sx, sy] = this.ports[skey].position;
+              if(!(skey in this.ports)) {
+                continue;
               }
+              let spos = this.ports[skey].position;
 
-              // Compute position of destination input port
-              let dx = 0, dy = 0;
+              // Get position of destination input port
               let dkey = `${step_id}.in.${input_name}`;
-              if(dkey in this.ports) {
-                [dx, dy] = this.ports[dkey].position;
+              if(!(dkey in this.ports)) {
+                continue;
               }
+              let dpos = this.ports[dkey].position;
 
               // Add connection to array
               connections.push({
-                key: `${step_id}.${input_name}.${source.step}.${source.output}`,
-                data: `M ${sx} ${sy} C ${sx + 40} ${sy} ${dx - 40} ${dy} ${dx} ${dy}`,
+                key: `${skey}.${dkey}`,
+                source: spos, dest: dpos,
               });
             }
           }

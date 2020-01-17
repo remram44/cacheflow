@@ -5,10 +5,12 @@
 <script>
 export default {
   name: 'Connection',
-  props: ['connection'],
+  props: ['source', 'dest'],
   computed: {
     path: function() {
-      return this.connection; // TODO: Build path from data
+      let [sx, sy] = this.source;
+      let [dx, dy] = this.dest;
+      return `M ${sx} ${sy} C ${sx + 40} ${sy} ${dx - 40} ${dy} ${dx} ${dy}`;
     },
   },
 }
