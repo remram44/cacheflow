@@ -1,4 +1,5 @@
 import logging
+from pkg_resources import iter_entry_points
 import shutil
 import tempfile
 
@@ -32,9 +33,29 @@ def hash_dict_list(dct, pickling):
 
 
 class Executor(object):
-    def __init__(self, cache, component_loaders):
+    def __init__(self, cache):
         self.cache = cache
-        self.component_loaders = component_loaders
+        self.component_loaders = []
+
+    def add_components_from_entrypoint(self):
+        for entry_point in iter_entry_points('cacheflow'):
+            try:
+                logger.info(
+                    "Getting component loader from %r...",
+                    entry_point.name,
+                )
+                loader = entry_point.load()()
+            except Exception:
+                logger.exception(
+                    "Components from plugin %r from %s %s failed to load",
+                    entry_point.name,
+                    entry_point.dist.project_name, entry_point.dist.version,
+                )
+            else:
+                self.component_loaders.append(loader)
+
+    def add_components_loader(self, loader):
+        self.component_loaders.append(loader)
 
     def load_component(self, component_def, pickling):
         for loader in self.component_loaders:

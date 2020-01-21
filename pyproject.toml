@@ -50,6 +50,10 @@ pandas = "^0.25.3"
 readme_renderer = "*"
 flake8 = "*"
 
+[tool.poetry.plugins.cacheflow]
+builtin_python = "cacheflow.python:BuiltinPythonLoader"
+builtins = "cacheflow.builtin_components:BuiltinComponentsLoader"
+
 [tool.poetry.scripts]
 cacheflow = "cacheflow.cli:main"
 noteflow = "cacheflow.literal:main"

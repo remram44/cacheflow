@@ -4,11 +4,9 @@ import os
 import sys
 
 from . import __version__
-from .builtin_components import BuiltinComponentsLoader
 from .cache import DirectoryCache
 from .executor import Executor
 from cacheflow.storage.json import load_workflow
-from .python import BuiltinPythonLoader
 
 
 def main():
@@ -49,6 +47,6 @@ def run(args):
     cache_loc = os.path.abspath('_cf_cache')
     os.chdir(os.path.dirname(args.workflow))
 
-    executor = Executor(DirectoryCache(cache_loc),
-                        [BuiltinPythonLoader(), BuiltinComponentsLoader()])
+    executor = Executor(DirectoryCache(cache_loc))
+    executor.add_components_from_entrypoint()
     executor.execute(workflow)
