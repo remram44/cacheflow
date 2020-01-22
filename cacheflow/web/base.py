@@ -43,8 +43,3 @@ class CorsHandler(BaseHandler):
         # CORS pre-flight
         self.set_status(204)
         return self.finish()
-
-
-class Application(tornado.web.Application):
-    def __init__(self, handlers, **kwargs):
-        super(Application, self).__init__(handlers, **kwargs)
