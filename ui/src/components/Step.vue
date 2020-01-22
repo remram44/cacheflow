@@ -6,7 +6,7 @@
     <a class="close" v-on:click.self.prevent="remove">[x]</a>
     <h2>{{step.component.type}}</h2>
     <table class="outputs">
-      <tr v-for="output of step.outputs" :key="output">
+      <tr v-for="output of outputs" :key="output">
         <td>???</td>
         <td>{{output}}</td>
       </tr>
@@ -44,6 +44,11 @@ export default {
         }
       }
       return entries;
+    },
+    outputs: function() {
+      let outputs = this.step.outputs.slice();
+      outputs.sort();
+      return outputs;
     },
     style: function() {
       return `left: ${this.step.position[0]}px; top: ${this.step.position[1]}px;`;
