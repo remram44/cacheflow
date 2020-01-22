@@ -59,10 +59,11 @@ class Component(object):
     def compute_hash(cls, input_hashes):
         fqdn = ('%s.%s\n' % (cls.__module__, cls.__name__))
         h = sha256(fqdn.encode())
-        for i_n, i_h in sorted(input_hashes.items()):
-            if i_h == UNHASHABLE:
-                return UNHASHABLE
-            h.update(('%s=%s\n' % (i_n, i_h)).encode())
+        for i_n, i_hs in sorted(input_hashes.items()):
+            for i_h in i_hs:
+                if i_h == UNHASHABLE:
+                    return UNHASHABLE
+                h.update(('%s\n%s\n' % (i_n, i_h)).encode())
         return h.hexdigest()
 
 
