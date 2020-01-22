@@ -99,3 +99,30 @@ def workflow_from_json(obj):
         steps[step_id] = Step(step_id, step['component'], inputs)
 
     return Workflow(steps, obj.get('meta', {}))
+
+
+def workflow_to_json(workflow):
+    """Save a workflow to a JSON structure.
+    """
+    steps = {}
+    for step in workflow.steps.values():
+        parameters = []
+        refs = []
+        for name, inputs in step.inputs.items():
+            for input in inputs:
+                if isinstance(input, StepInputConnection):
+                    refs.append({
+                        name: '%s.%s' % (
+                            input.source_step_id,
+                            input.source_output_name,
+                        )
+                    })
+                else:
+                    parameters.append({name: input})
+        steps[step.id] = {
+            'component': step.component_def,
+            'parameters': parameters,
+            'inputs': refs,
+        }
+
+    return {'steps': steps, 'meta': workflow.meta}
