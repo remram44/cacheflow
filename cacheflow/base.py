@@ -70,7 +70,7 @@ class Component(object):
 class ComponentLoader(object):
     """Component loader, capable of providing workflow components.
     """
-    def get_component(self, component_def, **kwargs):
+    def get_component(self, component_def):
         """Returns a component or None.
         """
         raise NotImplementedError

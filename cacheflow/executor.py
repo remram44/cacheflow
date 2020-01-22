@@ -59,9 +59,9 @@ class Executor(object):
 
     def load_component(self, component_def, pickling):
         for loader in self.component_loaders:
-            obj = loader.get_component(component_def, pickling=pickling)
-            if obj is not None:
-                return obj
+            cls = loader.get_component(component_def)
+            if cls is not None:
+                return cls(pickling=pickling)
         raise KeyError("Missing component")
 
     def execute(self, workflow, sinks=None, globals=None):
