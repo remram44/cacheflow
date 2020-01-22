@@ -20,32 +20,9 @@ export default {
   name: 'App',
   data: function() {
     return {
+      websocket: null,
       workflow: {
-        steps: {
-          dataset: {
-            component: {
-              type: "dataset"
-            },
-            position: [100, 100],
-            inputs: {
-              name: ["age.csv"],
-            },
-            outputs: ["table"],
-          },
-          plot: {
-            component: {
-              type: "plot"
-            },
-            position: [350, 150],
-            inputs: {
-              table: [{step: "dataset", output: "table"}],
-              x: ["name"],
-              y: ["age"],
-              style: [],
-            },
-            outputs: ["plot"],
-          },
-        },
+        steps: {},
       },
     };
   },
@@ -76,6 +53,24 @@ export default {
       let {name, position} = e;
       console.log("Step ", name, " moved to ", position);
     },
+  },
+  created: function() {
+    let url = window.API_WS_URL;
+    if(url.substring(url.length - 1) != '/') {
+      url += '/';
+    }
+    url += 'workflow';
+    let self = this;
+    this.websocket = new WebSocket(url);
+    this.websocket.addEventListener('open', function() {
+      console.log("Connected");
+    });
+    this.websocket.addEventListener('close', function() {
+      console.error("Connection closed");
+    });
+    this.websocket.addEventListener('message', function(event) {
+      self.workflow = JSON.parse(event.data);
+    });
   },
   components: {
     Canvas,
