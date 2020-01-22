@@ -101,7 +101,8 @@ def load_noteflow(fileobj):
 
 def render(noteflow, executor, out):
     logger.info("Executing...")
-    results = executor.execute(noteflow.workflow)
+    executor.load_workflow(noteflow.workflow)
+    results = executor.execute()
 
     md = markdown.Markdown()
 
@@ -116,10 +117,8 @@ def render(noteflow, executor, out):
 def main():
     """Entrypoint for the ``noteflow`` command.
     """
-    from .builtin_components import BuiltinComponentsLoader
     from .cache import DirectoryCache
     from .executor import Executor
-    from .python import BuiltinPythonLoader
 
     logging.basicConfig(level=logging.INFO)
 
@@ -127,9 +126,7 @@ def main():
     with open(sys.argv[1]) as fp:
         noteflow = load_noteflow(fp)
 
-    executor = Executor(
-        DirectoryCache('_cf_cache'),
-        [BuiltinPythonLoader(), BuiltinComponentsLoader()],
-    )
+    executor = Executor(DirectoryCache('_cf_cache'))
+    executor.add_components_from_entrypoint()
     with open(os.path.splitext(sys.argv[1])[0] + '.html', 'w') as out:
         render(noteflow, executor, out)

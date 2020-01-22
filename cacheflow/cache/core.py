@@ -97,6 +97,12 @@ class _Unhashable(object):
     def __hash__(self):
         raise TypeError
 
+    def __eq__(self, other):
+        return False
+
+    def __neq__(self, other):
+        return True
+
 
 UNHASHABLE = _Unhashable()
 

@@ -1,9 +1,4 @@
-import yaml
-
 from ..base import Workflow, Step, StepInputConnection
-
-
-__all__ = ['load_workflow']
 
 
 class InvalidWorkflowJson(ValueError):
@@ -38,18 +33,12 @@ def check_keys(obj, required, optional, msg=''):
         )
 
 
-def load_workflow(fileobj):
-    """Loads a workflow from a JSON file.
+def workflow_from_json(obj):
+    """Loads a workflow from a JSON structure.
     """
-    try:
-        obj = yaml.safe_load(fileobj)
-    except yaml.YAMLError:
-        raise InvalidWorkflowJson("Invalid YAML")
-
     check_keys(obj, ['steps'], ['meta'])
 
     steps = {}
-    not_sink_steps = set()
     for step_id, step in obj['steps'].items():
         check_keys(
             step,
@@ -81,7 +70,6 @@ def load_workflow(fileobj):
             inputs.setdefault(name, []).append(value)
 
         # Read inputs
-        has_inputs = False
         for i, input in enumerate(step.get('inputs', [])):
             if not isinstance(input, dict):
                 raise InvalidWorkflowJson(
@@ -106,12 +94,35 @@ def load_workflow(fileobj):
                     source_step_id, source_output_name,
                 )
             )
-            has_inputs = True
-
-        if has_inputs:
-            not_sink_steps.add(step_id)
 
         # Store step
         steps[step_id] = Step(step_id, step['component'], inputs)
 
     return Workflow(steps, obj.get('meta', {}))
+
+
+def workflow_to_json(workflow):
+    """Save a workflow to a JSON structure.
+    """
+    steps = {}
+    for step in workflow.steps.values():
+        parameters = []
+        refs = []
+        for name, inputs in step.inputs.items():
+            for input in inputs:
+                if isinstance(input, StepInputConnection):
+                    refs.append({
+                        name: '%s.%s' % (
+                            input.source_step_id,
+                            input.source_output_name,
+                        )
+                    })
+                else:
+                    parameters.append({name: input})
+        steps[step.id] = {
+            'component': step.component_def,
+            'parameters': parameters,
+            'inputs': refs,
+        }
+
+    return {'steps': steps, 'meta': workflow.meta}

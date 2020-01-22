@@ -61,7 +61,7 @@ class BuiltinComponentsLoader(ComponentLoader):
         empty_file=EmptyFile,
     )
 
-    def get_component(self, component_def, **kwargs):
+    def get_component(self, component_def):
         try:
             component = self.TABLE[component_def.get('type')]
         except KeyError:
@@ -69,4 +69,4 @@ class BuiltinComponentsLoader(ComponentLoader):
         else:
             component_def = dict(component_def)
             component_def.pop('type', None)
-            return component(**kwargs)
+            return component
