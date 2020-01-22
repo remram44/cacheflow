@@ -2,11 +2,15 @@ import argparse
 import logging
 import os
 import sys
+import yaml
 
 from . import __version__
 from .cache import DirectoryCache
 from .executor import Executor
-from cacheflow.storage.json import load_workflow
+from cacheflow.storage.json import InvalidWorkflowJson, workflow_from_json
+
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -41,8 +45,16 @@ def main():
 
 
 def run(args):
-    with open(args.workflow) as fp:
-        workflow = load_workflow(fp)
+    try:
+        with open(args.workflow) as fp:
+            try:
+                obj = yaml.safe_load(fp)
+            except yaml.YAMLError:
+                raise InvalidWorkflowJson("Invalid YAML")
+        workflow = workflow_from_json(obj)
+    except InvalidWorkflowJson as e:
+        logger.error("Error loading workflow: %s", e)
+        sys.exit(1)
 
     cache_loc = os.path.abspath('_cf_cache')
     os.chdir(os.path.dirname(args.workflow))

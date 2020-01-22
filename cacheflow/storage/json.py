@@ -1,9 +1,4 @@
-import yaml
-
 from ..base import Workflow, Step, StepInputConnection
-
-
-__all__ = ['load_workflow']
 
 
 class InvalidWorkflowJson(ValueError):
@@ -38,14 +33,9 @@ def check_keys(obj, required, optional, msg=''):
         )
 
 
-def load_workflow(fileobj):
-    """Loads a workflow from a JSON file.
+def workflow_from_json(obj):
+    """Loads a workflow from a JSON structure.
     """
-    try:
-        obj = yaml.safe_load(fileobj)
-    except yaml.YAMLError:
-        raise InvalidWorkflowJson("Invalid YAML")
-
     check_keys(obj, ['steps'], ['meta'])
 
     steps = {}
