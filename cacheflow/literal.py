@@ -101,7 +101,8 @@ def load_noteflow(fileobj):
 
 def render(noteflow, executor, out):
     logger.info("Executing...")
-    results = executor.execute(noteflow.workflow)
+    executor.load_workflow(noteflow.workflow)
+    results = executor.execute()
 
     md = markdown.Markdown()
 

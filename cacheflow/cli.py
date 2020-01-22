@@ -49,4 +49,5 @@ def run(args):
 
     executor = Executor(DirectoryCache(cache_loc))
     executor.add_components_from_entrypoint()
-    executor.execute(workflow)
+    executor.load_workflow(workflow)
+    executor.execute()
