@@ -39,7 +39,6 @@ def workflow_from_json(obj):
     check_keys(obj, ['steps'], ['meta'])
 
     steps = {}
-    not_sink_steps = set()
     for step_id, step in obj['steps'].items():
         check_keys(
             step,
@@ -71,7 +70,6 @@ def workflow_from_json(obj):
             inputs.setdefault(name, []).append(value)
 
         # Read inputs
-        has_inputs = False
         for i, input in enumerate(step.get('inputs', [])):
             if not isinstance(input, dict):
                 raise InvalidWorkflowJson(
@@ -96,10 +94,6 @@ def workflow_from_json(obj):
                     source_step_id, source_output_name,
                 )
             )
-            has_inputs = True
-
-        if has_inputs:
-            not_sink_steps.add(step_id)
 
         # Store step
         steps[step_id] = Step(step_id, step['component'], inputs)
