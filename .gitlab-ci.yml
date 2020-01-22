@@ -10,3 +10,4 @@ run_tests:
     - cacheflow run examples/pipeline.yaml
     - noteflow examples/notebook.cfnb
     - noteflow examples/notebook.cfnb
+    - python tests
