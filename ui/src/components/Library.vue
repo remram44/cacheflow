@@ -18,16 +18,16 @@ export default {
     return {
       components: [
         {
-          name: "dataset",
-          component: {type: "dataset"},
-          inputs: ["name"],
-          outputs: ["table"],
+          name: "download",
+          component: {type: "download"},
+          inputs: ["url", "headers"],
+          outputs: ["file"],
         },
         {
-          name: "plot",
-          component: {type: "plot"},
-          inputs: ["style", "table", "x", "y"],
-          outputs: ["plot"],
+          name: "python",
+          component: {type: "script.python"},
+          inputs: ["env"],
+          outputs: ["env", "streams"],
         },
       ],
     };
