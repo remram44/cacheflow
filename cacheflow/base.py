@@ -75,6 +75,13 @@ class ComponentLoader(object):
         """
         raise NotImplementedError
 
+    def list_components(self):
+        """Returns an iterable of pairs `(info, component_def)`
+
+        The `info` dict should at least contain an entry `label`.
+        """
+        return ()
+
 
 class _SimpleComponentLoaderNamespace(object):
     def __init__(self, table, namespace):
@@ -111,3 +118,9 @@ class SimpleComponentLoader(ComponentLoader, _SimpleComponentLoaderNamespace):
             except KeyError:
                 pass
         return None
+
+    def list_components(self):
+        res = []
+        for name in self.table:
+            res.append(({'label': name}, {'type': name}))
+        return res
