@@ -29,6 +29,7 @@ export default {
     };
   },
   methods: {
+    // TODO: Send messages for those actions
     addStep: function(component) {
       let inputs = {};
       for(let input of component.inputs) {
@@ -79,6 +80,7 @@ export default {
         for(let component of data.components) {
           self.components.push(component);
         }
+      // TODO: Implement other actions
       } else if(data.type == 'workflow_remove_step') {
         self.$delete(self.workflow.steps, data.step_id);
       } else {

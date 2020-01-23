@@ -62,6 +62,7 @@ def workflow_to_json(workflow):
 
 
 def json_to_action(type_, message):
+    # TODO: Implement other actions
     if type_ == 'workflow_remove_step':
         return actions.RemoveStep(message['step_id'])
     else:
@@ -70,6 +71,7 @@ def json_to_action(type_, message):
 
 
 def action_to_json(action):
+    # TODO: Implement other actions
     if isinstance(action, actions.RemoveStep):
         return {'type': 'workflow_remove_step', 'step_id': action.step_id}
     else:
