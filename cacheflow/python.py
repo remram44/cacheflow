@@ -43,7 +43,7 @@ class OutputStreams(object):
 # TODO: Figure out calling different Python versions
 
 
-@register('script.python')
+@register('script.Python')
 class BuiltinPython(Component):
     """Execute Python code in the current interpreter.
     """

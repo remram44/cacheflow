@@ -68,6 +68,7 @@ class Executor(object):
             cls = loader.get_component(component_def)
             if cls is not None:
                 return cls
+        logger.warning("Can't find component: %r", component_def)
         raise KeyError("Missing component")
 
     def _make_component(self, component_def):

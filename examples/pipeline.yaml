@@ -7,7 +7,7 @@ steps:
   webpage:
     description: Download a web page
     component:
-      type: download
+      type: Download
     parameters:
     - url: https://framapiaf.org/@remram44
     - headers: 'accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams"'
@@ -15,7 +15,7 @@ steps:
   webpage_bytes:
     description: Read web page bytes
     component:
-      type: script.python
+      type: script.Python
     parameters:
     - code: |
         with open(file.name, 'rb') as fp:
@@ -26,14 +26,14 @@ steps:
   local_csv:
     description: Get CSV from local file
     component:
-      type: download
+      type: Download
     parameters:
     - url: file://data.csv
 
   csv_column:
     description: Load column of CSV file
     component:
-      type: script.python
+      type: script.Python
       version: ">= 3.3"
       requirements:
       - pandas
@@ -51,7 +51,7 @@ steps:
   report:
     description: Print out report
     component:
-      type: script.python
+      type: script.Python
     parameters:
     - code: |
         report = """\
