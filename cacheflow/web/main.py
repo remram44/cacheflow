@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import tornado.ioloop
@@ -8,12 +9,13 @@ from tornado.websocket import WebSocketHandler
 from ..base import Step, StepInputConnection, Workflow
 from ..cache import NullCache
 from ..executor import Executor
+from ..storage import actions
 
 
 logger = logging.getLogger(__name__)
 
 
-def to_json(workflow):
+def workflow_to_json(workflow):
     # Translate the list of steps
     steps = {}
     for step in workflow.steps.values():
@@ -59,9 +61,26 @@ def to_json(workflow):
     return {'steps': steps, 'meta': workflow.meta}
 
 
+def json_to_action(type_, message):
+    if type_ == 'workflow_remove_step':
+        return actions.RemoveStep(message['step_id'])
+    else:
+        logger.error("Got invalid action type %r", type_)
+        return
+
+
+def action_to_json(action):
+    if isinstance(action, actions.RemoveStep):
+        return {'type': 'workflow_remove_step', 'step_id': action.step_id}
+    else:
+        raise TypeError
+
+
 class Application(tornado.web.Application):
     def __init__(self, handlers, **kwargs):
         super(Application, self).__init__(handlers, **kwargs)
+
+        self.client_sockets = set()
 
         self.executor = Executor(NullCache())
         self.executor.add_components_from_entrypoint()
@@ -112,9 +131,23 @@ class Application(tornado.web.Application):
             {},
         )
 
+    def add_socket(self, socket):
+        self.client_sockets.add(socket)
+
+    def remove_socket(self, socket):
+        self.client_sockets.discard(socket)
+
+    def apply_action(self, action):
+        self.workflow = action.apply(self.workflow)
+
+        message = action_to_json(action)
+        for socket in self.client_sockets:
+            socket.write_message(message)
+
 
 class WorkflowWS(WebSocketHandler):
     def open(self):
+        self.application.add_socket(self)
         logger.info("WebSocket connected")
 
         # Send components library
@@ -133,13 +166,21 @@ class WorkflowWS(WebSocketHandler):
         # Send current workflow
         self.write_message({
             'type': 'workflow',
-            'workflow': to_json(self.application.workflow),
+            'workflow': workflow_to_json(self.application.workflow),
         })
 
     def on_message(self, message):
-        pass
+        message = json.loads(message)
+        type_ = message.pop('type')
+        if type_.startswith('workflow_'):
+            action = json_to_action(type_, message)
+            if action:
+                self.application.apply_action(action)
+        else:
+            logger.error("Got invalid message %r", type_)
 
     def on_close(self):
+        self.application.remove_socket(self)
         logger.info("WebSocket disconnected")
 
     def check_origin(self, origin):

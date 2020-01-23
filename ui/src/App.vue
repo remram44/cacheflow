@@ -47,9 +47,10 @@ export default {
       console.log("Step ", name, " added");
     },
     removeStep: function(name) {
-      this.$delete(this.workflow.steps, name);
-      console.log("Step ", name, " removed");
-      // TODO: Remove connections from this step
+      this.websocket.send(JSON.stringify({
+        type: 'workflow_remove_step',
+        step_id: name,
+      }));
     },
     moveStep: function(e) {
       let {name, position} = e;
@@ -78,6 +79,10 @@ export default {
         for(let component of data.components) {
           self.components.push(component);
         }
+      } else if(data.type == 'workflow_remove_step') {
+        self.$delete(self.workflow.steps, data.step_id);
+      } else {
+        console.error("Unrecognized message from server: ", data);
       }
     });
   },
