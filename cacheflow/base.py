@@ -13,10 +13,14 @@ class StepInputConnection(object):
 
 
 class Step(object):
-    def __init__(self, id, component_def, inputs):
+    def __init__(self, id, component_def, inputs, *, position=None):
         self.id = id
         self.component_def = component_def
         self.inputs = inputs
+        if position:
+            self.position = position
+        else:
+            self.position = [0, 0]
 
     def __repr__(self):
         return '<Step {!r} type={!r} inputs={{{}}}>'.format(

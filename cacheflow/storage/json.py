@@ -43,7 +43,7 @@ def workflow_from_json(obj):
         check_keys(
             step,
             ['component'],
-            ['inputs', 'outputs', 'parameters', 'description'],
+            ['inputs', 'outputs', 'parameters', 'description', 'position'],
             "Step %r" % step_id,
         )
 
@@ -96,7 +96,10 @@ def workflow_from_json(obj):
             )
 
         # Store step
-        steps[step_id] = Step(step_id, step['component'], inputs)
+        steps[step_id] = Step(
+            step_id, step['component'], inputs,
+            position=step.get('position'),
+        )
 
     return Workflow(steps, obj.get('meta', {}))
 
@@ -123,6 +126,7 @@ def workflow_to_json(workflow):
             'component': step.component_def,
             'parameters': parameters,
             'inputs': refs,
+            'position': step.position,
         }
 
     return {'steps': steps, 'meta': workflow.meta}

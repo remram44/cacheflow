@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>draft</title>
+    <style type="text/css">
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+div.canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+svg.canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.step {
+  position: absolute;
+  width: 200px;
+  border: 1px solid black;
+  padding: 6px;
+  z-index: 15;
+}
+
+.step h2 {
+  text-align: center;
+  margin: 0 0 0.2rem 0;
+}
+
+.step td {
+  font-size: 0.85rem;
+}
+
+.step input {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+}
+
+.connection {
+  stroke: black;
+  fill: none;
+}
+
+.step table.inputs {
+  margin-right: auto;
+}
+
+.step table.outputs {
+  margin-left: auto;
+}
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="step" style="top: 100px; left: 100px;">
+        <h2>Dataset</h2>
+        <table class="outputs">
+          <tr>
+            <td><pre>(3x2 table)</pre></td>
+            <td>table</td>
+          </tr>
+        </table>
+        <table class="inputs">
+          <tr>
+            <td>name</td>
+            <td><input type="text" value="ages.csv"></td>
+          </tr>
+        </table>
+      </div>
+      <div class="step" style="top: 150px; left: 350px;">
+        <h2>Plot</h2>
+        <table class="outputs">
+          <tr>
+            <td><img src="data:image/png;base64,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" style="width: 100%;"></td>
+            <td>plot</td>
+          </tr>
+        </table>
+        <table class="inputs">
+          <tr>
+            <td>table</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>x</td>
+            <td><input type="text" value="name"></td>
+          </tr>
+          <tr>
+            <td>y</td>
+            <td><input type="text" value="age"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <svg class="canvas">
+      <g style="pointer-events: auto; shape-rendering: geometricPrecision;">
+        <path class="connection" d="M 308 163 C 358 163 300 380 350 380"/>
+      </g>
+
+      <g style="pointer-events: auto; shape-rendering: geometricPrecision;">
+        <circle cx="312" cy="163" r="6" stroke="black" fill="yellow"/>
+        <circle cx="100" cy="210" r="6" stroke="black" fill="grey"/>
+      </g>
+
+      <g style="pointer-events: auto; shape-rendering: geometricPrecision;">
+        <circle cx="350" cy="380" r="6" stroke="black" fill="yellow"/>
+        <circle cx="350" cy="410" r="6" stroke="black" fill="yellow"/>
+        <circle cx="350" cy="445" r="6" stroke="black" fill="yellow"/>
+        <circle cx="562" cy="280" r="6" stroke="black" fill="red"/>
+      </g>
+    </svg>
+  </body>
+</html>
