@@ -3,8 +3,8 @@
     <div>
       <div>
         <h1>Workflow library</h1>
-        <p v-for="component in components" :key="component.component.type">
-          <button v-on:click="add(component)">{{ component.name }}</button>
+        <p v-for="component in components" :key="component.component_def.type">
+          <button v-on:click="add(component)">{{ component.label }}</button>
         </p>
       </div>
     </div>
@@ -14,24 +14,7 @@
 <script>
 export default {
   name: 'Library',
-  data: function() {
-    return {
-      components: [
-        {
-          name: "download",
-          component: {type: "download"},
-          inputs: ["url", "headers"],
-          outputs: ["file"],
-        },
-        {
-          name: "python",
-          component: {type: "script.python"},
-          inputs: ["env"],
-          outputs: ["env", "streams"],
-        },
-      ],
-    };
-  },
+  props: ['components'],
   methods: {
     add: function(component) {
       this.$emit('add', component);

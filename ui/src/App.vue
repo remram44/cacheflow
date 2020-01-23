@@ -6,6 +6,7 @@
       />
 
     <Library
+      :components="components"
       v-on:add="addStep"
       />
   </div>
@@ -24,6 +25,7 @@ export default {
       workflow: {
         steps: {},
       },
+      components: [],
     };
   },
   methods: {
@@ -36,7 +38,7 @@ export default {
       this.$set(
         this.workflow.steps, name,
         {
-          component: component.component,
+          component: component.component_def,
           position: [10, 10],
           inputs: inputs,
           outputs: component.outputs.slice(),
@@ -69,7 +71,14 @@ export default {
       console.error("Connection closed");
     });
     this.websocket.addEventListener('message', function(event) {
-      self.workflow = JSON.parse(event.data);
+      let data = JSON.parse(event.data);
+      if(data.type == 'workflow') {
+        self.workflow = data.workflow;
+      } else if(data.type == 'components_add') {
+        for(let component of data.components) {
+          self.components.push(component);
+        }
+      }
     });
   },
   components: {

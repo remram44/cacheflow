@@ -5,7 +5,9 @@ import tornado.web
 from tornado.routing import URLSpec
 from tornado.websocket import WebSocketHandler
 
-from ..base import Workflow, Step, StepInputConnection
+from ..base import Step, StepInputConnection, Workflow
+from ..cache import NullCache
+from ..executor import Executor
 
 
 logger = logging.getLogger(__name__)
@@ -60,6 +62,10 @@ def to_json(workflow):
 class Application(tornado.web.Application):
     def __init__(self, handlers, **kwargs):
         super(Application, self).__init__(handlers, **kwargs)
+
+        self.executor = Executor(NullCache())
+        self.executor.add_components_from_entrypoint()
+
         self.workflow = Workflow(
             {
                 '01aeb224-8312-4bbe-ba3b-5ea3198f3c5c': Step(
@@ -86,6 +92,7 @@ class Application(tornado.web.Application):
                             'file',
                         )],
                     },
+                    position=[300, 200],
                 ),
                 '03bf3df2-e1d3-4c4e-9b99-ad3072bded03': Step(
                     '03bf3df2-e1d3-4c4e-9b99-ad3072bded03',
@@ -99,6 +106,7 @@ class Application(tornado.web.Application):
                             'env',
                         )],
                     },
+                    position=[600, 300],
                 ),
             },
             {},
@@ -108,7 +116,25 @@ class Application(tornado.web.Application):
 class WorkflowWS(WebSocketHandler):
     def open(self):
         logger.info("WebSocket connected")
-        self.write_message(to_json(self.application.workflow))
+
+        # Send components library
+        components = []
+        for loader in self.application.executor.component_loaders:
+            for info, component_def in loader.list_components():
+                comp_dict = dict(info, component_def=component_def)
+                comp_dict.setdefault('inputs', [])
+                comp_dict.setdefault('outputs', [])
+                components.append(comp_dict)
+        self.write_message({
+            'type': 'components_add',
+            'components': components,
+        })
+
+        # Send current workflow
+        self.write_message({
+            'type': 'workflow',
+            'workflow': to_json(self.application.workflow),
+        })
 
     def on_message(self, message):
         pass
