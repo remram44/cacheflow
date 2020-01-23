@@ -51,8 +51,8 @@ readme_renderer = "*"
 flake8 = "*"
 
 [tool.poetry.plugins.cacheflow]
-builtin_python = "cacheflow.python:BuiltinPythonLoader"
-builtins = "cacheflow.builtin_components:BuiltinComponentsLoader"
+builtin_python = "cacheflow.python:register"
+builtins = "cacheflow.builtin_components:register"
 
 [tool.poetry.scripts]
 cacheflow = "cacheflow.cli:main"

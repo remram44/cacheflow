@@ -50,7 +50,7 @@ class Executor(object):
                     "Getting component loader from %r...",
                     entry_point.name,
                 )
-                loader = entry_point.load()()
+                loader = entry_point.load()
             except Exception:
                 logger.exception(
                     "Components from plugin %r from %s %s failed to load",

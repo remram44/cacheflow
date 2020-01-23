@@ -3,8 +3,11 @@ import requests
 import shutil
 from urllib.parse import urlparse
 
-from .base import Component, ComponentLoader
+from .base import Component, SimpleComponentLoader
 from .cache.core import TemporaryFile
+
+
+register = SimpleComponentLoader()
 
 
 # TODO: More builtin components
@@ -15,6 +18,7 @@ from .cache.core import TemporaryFile
 # Checksum: check a file's checksum (or add to Download?)
 
 
+@register('download')
 class Download(Component):
     """Downloads a file.
     """
@@ -44,6 +48,7 @@ class Download(Component):
         self.set_output('file', temp_file)
 
 
+@register('empty_file')
 class EmptyFile(Component):
     """Gets an empty temporary file.
     """
@@ -51,22 +56,3 @@ class EmptyFile(Component):
         suffix, = inputs.get('suffix', (None,))
         temp_file = TemporaryFile(temp_dir, suffix=suffix)
         self.set_output('file', temp_file)
-
-
-class BuiltinComponentsLoader(ComponentLoader):
-    """Built-in components to do basic things.
-    """
-    TABLE = dict(
-        download=Download,
-        empty_file=EmptyFile,
-    )
-
-    def get_component(self, component_def):
-        try:
-            component = self.TABLE[component_def.get('type')]
-        except KeyError:
-            return None
-        else:
-            component_def = dict(component_def)
-            component_def.pop('type', None)
-            return component

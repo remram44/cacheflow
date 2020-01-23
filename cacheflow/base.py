@@ -74,3 +74,40 @@ class ComponentLoader(object):
         """Returns a component or None.
         """
         raise NotImplementedError
+
+
+class _SimpleComponentLoaderNamespace(object):
+    def __init__(self, table, namespace):
+        self.table = table
+        self.namespace = namespace
+
+    def __call__(self, name=None):
+        def wrapper(cls):
+            if name is None:
+                name_ = cls.__name__
+            else:
+                name_ = name
+            self.table[self.namespace + name_] = cls
+
+        return wrapper
+
+    def namespace(self, name):
+        return _SimpleComponentLoaderNamespace(
+            self.table,
+            self.namespace + name + '.',
+        )
+
+
+class SimpleComponentLoader(ComponentLoader, _SimpleComponentLoaderNamespace):
+    """Default component loader, allowing to easily register components.
+    """
+    def __init__(self):
+        _SimpleComponentLoaderNamespace.__init__(self, {}, '')
+
+    def get_component(self, component_def):
+        if 'type' in component_def:
+            try:
+                return self.table[component_def['type']]
+            except KeyError:
+                pass
+        return None
