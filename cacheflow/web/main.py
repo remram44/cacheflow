@@ -44,10 +44,10 @@ def to_json(workflow):
                         input.source_output_name,
                     )
         # FIXME: Get additional information from executor/controller
-        if step.component_def['type'] == 'script.python':
+        if step.component_def['type'] == 'script.Python':
             steps[step.id]['inputs'].setdefault('env', [])
             steps[step.id]['outputs'].add('env')
-        elif step.component_def['type'] == 'download':
+        elif step.component_def['type'] == 'Download':
             steps[step.id]['inputs'].setdefault('url', [])
             steps[step.id]['inputs'].setdefault('headers', [])
             steps[step.id]['outputs'].add('file')
@@ -64,7 +64,7 @@ class Application(tornado.web.Application):
             {
                 '01aeb224-8312-4bbe-ba3b-5ea3198f3c5c': Step(
                     '01aeb224-8312-4bbe-ba3b-5ea3198f3c5c',
-                    {'type': 'download'},
+                    {'type': 'Download'},
                     {
                         'headers': [
                             'accept: application/ld+json; ' +
@@ -75,7 +75,7 @@ class Application(tornado.web.Application):
                 ),
                 '02a716e6-e11c-43c2-b50e-4a80083d0456': Step(
                     '02a716e6-e11c-43c2-b50e-4a80083d0456',
-                    {'type': 'script.python'},
+                    {'type': 'script.Python'},
                     {
                         'code': [
                             'with open(webpage.name, \'rb\') as fp:\n' +
@@ -89,7 +89,7 @@ class Application(tornado.web.Application):
                 ),
                 '03bf3df2-e1d3-4c4e-9b99-ad3072bded03': Step(
                     '03bf3df2-e1d3-4c4e-9b99-ad3072bded03',
-                    {'type': 'script.python'},
+                    {'type': 'script.Python'},
                     {
                         'code': [
                             'print(len(contents))\n',

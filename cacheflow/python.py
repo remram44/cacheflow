@@ -1,7 +1,10 @@
 import builtins
 import sys
 
-from .base import Component, ComponentLoader
+from .base import Component, SimpleComponentLoader
+
+
+register = SimpleComponentLoader()
 
 
 class OutputStreams(object):
@@ -40,6 +43,7 @@ class OutputStreams(object):
 # TODO: Figure out calling different Python versions
 
 
+@register('script.Python', inputs=['code', 'env'], outputs=['env', 'streams'])
 class BuiltinPython(Component):
     """Execute Python code in the current interpreter.
     """
@@ -68,10 +72,3 @@ class BuiltinPython(Component):
         local.pop('__builtins__', None)
         self.set_output('env', local)
         self.set_output('streams', streams.get())
-
-
-class BuiltinPythonLoader(ComponentLoader):
-    def get_component(self, component_def):
-        if component_def.get('type') != 'script.python':
-            return None
-        return BuiltinPython

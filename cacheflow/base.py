@@ -78,3 +78,63 @@ class ComponentLoader(object):
         """Returns a component or None.
         """
         raise NotImplementedError
+
+    def list_components(self):
+        """Returns an iterable of pairs `(info, component_def)`
+
+        The `info` dict should at least contain an entry `label`.
+        """
+        return ()
+
+
+class _SimpleComponentLoaderNamespace(object):
+    def __init__(self, table, namespace):
+        self.table = table
+        self.namespace = namespace
+
+    def __call__(self, name=None, label=None, inputs=None, outputs=None):
+        def wrapper(cls):
+            if name is None:
+                name_ = cls.__name__
+            else:
+                name_ = name
+            if label is None:
+                label_ = cls.__name__
+            else:
+                label_ = label
+            self.table[self.namespace + name_] = (
+                cls,
+                {
+                    'label': label_,
+                    'inputs': inputs or [], 'outputs': outputs or [],
+                },
+            )
+
+        return wrapper
+
+    def namespace(self, name):
+        return _SimpleComponentLoaderNamespace(
+            self.table,
+            self.namespace + name + '.',
+        )
+
+
+class SimpleComponentLoader(ComponentLoader, _SimpleComponentLoaderNamespace):
+    """Default component loader, allowing to easily register components.
+    """
+    def __init__(self):
+        _SimpleComponentLoaderNamespace.__init__(self, {}, '')
+
+    def get_component(self, component_def):
+        if 'type' in component_def:
+            try:
+                return self.table[component_def['type']][0]
+            except KeyError:
+                pass
+        return None
+
+    def list_components(self):
+        res = []
+        for name, (_cls, info) in self.table.items():
+            res.append((info, {'type': name}))
+        return res

@@ -50,7 +50,7 @@ class Executor(object):
                     "Getting component loader from %r...",
                     entry_point.name,
                 )
-                loader = entry_point.load()()
+                loader = entry_point.load()
             except Exception:
                 logger.exception(
                     "Components from plugin %r from %s %s failed to load",
@@ -68,6 +68,7 @@ class Executor(object):
             cls = loader.get_component(component_def)
             if cls is not None:
                 return cls
+        logger.warning("Can't find component: %r", component_def)
         raise KeyError("Missing component")
 
     def _make_component(self, component_def):

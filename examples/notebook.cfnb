@@ -2,7 +2,7 @@
 
 This test file is markdown, but also contains code.
 
-```{type: script.python, version: ">=3.3", requirements: [numpy, pandas]}
+```{type: script.Python, version: ">=3.3", requirements: [numpy, pandas]}
 import pandas
 
 dataframe = pandas.DataFrame({'name': ["Remi", "Vicky", "JY", "LB"],
@@ -12,7 +12,7 @@ print(dataframe)
 
 Cells can use each other's output, and cacheflow will cache those for efficiency.
 
-```{type: script.python, requirements: [pandas]}
+```{type: script.Python, requirements: [pandas]}
 print(dataframe['age'].mean())
 ```
 
