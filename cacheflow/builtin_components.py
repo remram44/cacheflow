@@ -18,7 +18,7 @@ register = SimpleComponentLoader()
 # Checksum: check a file's checksum (or add to Download?)
 
 
-@register()
+@register(inputs=['url', 'headers'])
 class Download(Component):
     """Downloads a file.
     """
@@ -48,7 +48,7 @@ class Download(Component):
         self.set_output('file', temp_file)
 
 
-@register()
+@register(inputs=['suffix'], outputs=['file'])
 class EmptyFile(Component):
     """Gets an empty temporary file.
     """
