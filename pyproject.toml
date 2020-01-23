@@ -44,6 +44,7 @@ markdown = "^3"
 requests = "^2.22"
 PyYAML = "^5.3"
 cloudpickle = "^1.2"
+tornado = "~6.0"
 
 [tool.poetry.dev-dependencies]
 pandas = "^0.25.3"
@@ -56,6 +57,7 @@ builtins = "cacheflow.builtin_components:register"
 
 [tool.poetry.scripts]
 cacheflow = "cacheflow.cli:main"
+cacheflow-web = "cacheflow.web.main:main"
 noteflow = "cacheflow.literal:main"
 
 [build-system]
