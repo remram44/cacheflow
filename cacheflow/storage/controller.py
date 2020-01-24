@@ -149,12 +149,12 @@ class _StepInputsProxy(object):
             action = actions.RemoveInput(step.id, input_name, idx)
             self._controller.apply_action(action)
         for idx, value in enumerate(values):
-            if isinstance(value, _StepOutputProxy):
+            if isinstance(value, Output):
                 if value._controller is not self._controller:
                     raise ValueError("Can't connect steps across workflows")
                 action = actions.AddInputConnection(
                     step.id, input_name, idx,
-                    value._step_id, value._output_name,
+                    value.step_id, value.output_name,
                 )
             elif isinstance(value, str):
                 action = actions.AddInputParameter(
@@ -221,7 +221,7 @@ class _StepInputsProxy(object):
 
 def _wrap_output(v, controller):
     if isinstance(v, StepInputConnection):
-        return _StepOutputProxy(
+        return Output(
             controller,
             v.source_step_id, v.source_output_name,
         )
@@ -244,12 +244,12 @@ class _StepInputProxy(object):
 
     def insert(self, idx, value):
         step = self._step()
-        if isinstance(value, _StepOutputProxy):
+        if isinstance(value, Output):
             if value._controller is not self._controller:
                 raise ValueError("Can't connect steps across workflows")
             action = actions.AddInputConnection(
                 step.id, self._input_name, idx,
-                value._step_id, value._output_name,
+                value.step_id, value.output_name,
             )
         elif isinstance(value, str):
             action = actions.AddInputParameter(
@@ -290,7 +290,7 @@ class _StepOutputsProxy(object):
         return self._controller.current_workflow.steps[self._step_id]
 
     def __getitem__(self, output_name):
-        return _StepOutputProxy(self._controller, self._step_id, output_name)
+        return Output(self._controller, self._step_id, output_name)
 
     def _outputs(self):
         step = self._step()
@@ -323,10 +323,10 @@ class _StepOutputsProxy(object):
         return output_name in self._outputs()
 
 
-class _StepOutputProxy(object):
+class Output(object):
     def __init__(self, controller, step_id, output_name):
         self._controller = controller
-        self._step_id = step_id
-        self._output_name = output_name
+        self.step_id = step_id
+        self.output_name = output_name
 
     # TODO: Access outputs from Executor?
