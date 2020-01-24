@@ -79,6 +79,9 @@ class ComponentLoader(object):
         """
         raise NotImplementedError
 
+    def get_component_info(self, component_def):
+        raise NotImplementedError
+
     def list_components(self):
         """Returns an iterable of pairs `(info, component_def)`
 
@@ -129,6 +132,14 @@ class SimpleComponentLoader(ComponentLoader, _SimpleComponentLoaderNamespace):
         if 'type' in component_def:
             try:
                 return self.table[component_def['type']][0]
+            except KeyError:
+                pass
+        return None
+
+    def get_component_info(self, component_def):
+        if 'type' in component_def:
+            try:
+                return self.table[component_def['type']][1]
             except KeyError:
                 pass
         return None

@@ -14,11 +14,15 @@ class WorkflowController(object):
         self.current_workflow = workflow
         self.executor = executor
         self._change_observers = set()
+        self._connected_outputs_cache = None
 
     def apply_action(self, action):
         self.current_workflow = action.apply(self.current_workflow)
         for observer in self._change_observers:
             observer.on_workflow_action(action)
+
+        # Invalidate cache
+        self._connected_outputs_cache = None
 
     @property
     def steps(self):
@@ -29,6 +33,19 @@ class WorkflowController(object):
 
     def remove_change_observer(self, observer):
         self._change_observers.discard(observer)
+
+    @property
+    def _connected_outputs(self):
+        if self._connected_outputs_cache is None:
+            self._connected_outputs_cache = {}
+            for step in self.current_workflow.steps.values():
+                for inputs in step.inputs.values():
+                    for input in inputs:
+                        if isinstance(input, StepInputConnection):
+                            self._connected_outputs_cache \
+                                .setdefault(input.source_step_id, set()) \
+                                .add(input.source_output_name)
+        return self._connected_outputs_cache
 
 
 class _StepsProxy(object):
@@ -154,17 +171,34 @@ class _StepInputsProxy(object):
             action = actions.RemoveInput(step.id, input_name, idx)
             self._controller.apply_action(action)
 
-    def __iter__(self):
-        # TODO: Augment that with information from Component
-        return iter(
+    def _inputs(self):
+        step = self._step()
+
+        # Get the connected inputs
+        inputs = set(
             input_name
-            for input_name, array in self._step().inputs.iter()
+            for input_name, array in step.inputs.items()
             if array
         )
 
+        executor = self._controller.executor
+        if executor:
+            # Add the declared inputs for this component
+            component_info = None
+            for loader in executor.component_loaders:
+                component_info = loader.get_component_info(step.component_def)
+                if component_info is not None:
+                    break
+            if component_info is not None:
+                inputs.update(component_info.get('inputs', ()))
+
+        return inputs
+
+    def __iter__(self):
+        return iter(self._inputs())
+
     def __contains__(self, input_name):
-        # TODO: Augment that with information from Component
-        return bool(self._step().inputs.get(input_name))
+        return input_name in self._inputs()
 
     def keys(self):
         return iter(self._inputs())
@@ -258,14 +292,35 @@ class _StepOutputsProxy(object):
     def __getitem__(self, output_name):
         return _StepOutputProxy(self._controller, self._step_id, output_name)
 
+    def _outputs(self):
+        step = self._step()
+
+        # Get the connected outputs
+        outputs = set(
+            self._controller._connected_outputs.get(self._step_id, ()),
+        )
+
+        executor = self._controller.executor
+        if executor:
+            # Add the declared outputs for this component
+            component_info = None
+            for loader in executor.component_loaders:
+                component_info = loader.get_component_info(step.component_def)
+                if component_info is not None:
+                    break
+            if component_info is not None:
+                outputs.update(component_info.get('outputs', ()))
+
+            # Get the actual outputs for this component
+            # TODO: Get list of outputs from Executor
+
+        return outputs
+
     def __iter__(self):
-        # TODO: Get information from Component
-        # TODO: Get information from Executor
-        return iter(())
+        return iter(self._outputs())
 
     def __contains__(self, output_name):
-        # TODO: As above
-        return False
+        return output_name in self._outputs()
 
 
 class _StepOutputProxy(object):
