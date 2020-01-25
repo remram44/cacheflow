@@ -39,12 +39,15 @@ class WorkflowController(object):
         if self._connected_outputs_cache is None:
             self._connected_outputs_cache = {}
             for step in self.current_workflow.steps.values():
-                for inputs in step.inputs.values():
-                    for input in inputs:
+                for input_name, inputs in step.inputs.items():
+                    for idx, input in enumerate(inputs):
                         if isinstance(input, StepInputConnection):
                             self._connected_outputs_cache \
-                                .setdefault(input.source_step_id, set()) \
-                                .add(input.source_output_name)
+                                .setdefault(input.source_step_id, {}) \
+                                .setdefault(
+                                    input.source_output_name,
+                                    (step.id, input_name, idx),
+                                )
         return self._connected_outputs_cache
 
 
