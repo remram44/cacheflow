@@ -3,6 +3,9 @@
     <Canvas
       :workflow="workflow"
       v-on:stepremove="removeStep" v-on:stepmove="moveStep"
+      v-on:setinputparameter="setInputParameter"
+      v-on:setconnection="setConnection"
+      v-on:removeconnection="removeConnection"
       />
 
     <Library
@@ -15,7 +18,6 @@
 <script>
 import Canvas from './components/Canvas.vue'
 import Library from './components/Library.vue'
-import { uuid4 } from './utils.js'
 
 export default {
   name: 'App',
@@ -29,23 +31,12 @@ export default {
     };
   },
   methods: {
-    // TODO: Send messages for those actions
     addStep: function(component) {
-      let inputs = {};
-      for(let input of component.inputs) {
-        inputs[input] = [];
-      }
-      let name = uuid4();
-      this.$set(
-        this.workflow.steps, name,
-        {
-          component: component.component_def,
-          position: [10, 10],
-          inputs: inputs,
-          outputs: component.outputs.slice(),
-        },
-      );
-      console.log("Step ", name, " added");
+      this.websocket.send(JSON.stringify({
+        type: 'workflow_add_step',
+        component_def: component.component_def,
+        position: [10, 10],
+      }));
     },
     removeStep: function(name) {
       this.websocket.send(JSON.stringify({
@@ -55,7 +46,35 @@ export default {
     },
     moveStep: function(e) {
       let {name, position} = e;
-      console.log("Step ", name, " moved to ", position);
+      this.websocket.send(JSON.stringify({
+        type: 'workflow_move_step',
+        step_id: name,
+        position: position,
+      }));
+    },
+    setInputParameter: function(e) {
+      this.websocket.send(JSON.stringify({
+        type: 'workflow_set_input_parameter',
+        step_id: e['name'],
+        input_name: e['input_name'],
+        value: e['value'],
+      }));
+    },
+    setConnection: function(e) {
+      this.websocket.send(JSON.stringify({
+        type: 'workflow_set_input_connection',
+        step_id: e.name,
+        input_name: e.input_name,
+        source_step_id: e.source_name,
+        source_output_name: e.source_output_name,
+      }));
+    },
+    removeConnection: function(e) {
+      this.websocket.send(JSON.stringify({
+        type: 'workflow_remove_inputs',
+        step_id: e.name,
+        input_name: e.input_name,
+      }));
     },
   },
   created: function() {
@@ -80,7 +99,7 @@ export default {
         for(let component of data.components) {
           self.components.push(component);
         }
-      // TODO: Implement other actions
+      // TODO: Implement other incremental actions
       } else if(data.type == 'workflow_remove_step') {
         self.$delete(self.workflow.steps, data.step_id);
       } else {

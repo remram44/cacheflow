@@ -78,14 +78,14 @@ class AddInputConnection(BaseAction):
             raise ActionError("Can't add input to step that's not there")
         steps = dict(workflow.steps)
         steps[self.step_id] = step = copy(steps[self.step_id])
-        inputs = step.inputs.get(self.input_name, ())
+        inputs = step.inputs.get(self.input_name, [])
         if not (0 <= self.index <= len(inputs)):
             raise ActionError("Invalid index to insert input connection")
         conn = StepInputConnection(
             self.source_step_id,
             self.source_output_name,
         )
-        inputs = inputs[:self.index] + (conn,) + inputs[self.index:]
+        inputs = inputs[:self.index] + [conn] + inputs[self.index:]
         step.inputs[self.input_name] = inputs
         return Workflow(steps, workflow.meta)
 

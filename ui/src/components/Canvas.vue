@@ -7,6 +7,7 @@
         v-on:setport="setPort"
         v-on:stepmove="moveStep"
         v-on:remove="removeStep(name)"
+        v-on:setinputparameter="setInputParameter"
         />
     </div>
     <svg class="canvas ports">
@@ -126,6 +127,9 @@ export default {
     removeStep: function(name) {
       this.$emit('stepremove', name);
     },
+    setInputParameter: function(e) {
+      this.$emit('setinputparameter', e);
+    },
     startConnection: function(port_name) {
       let source_port = this.ports[port_name];
       this.newConnection = {
@@ -142,20 +146,15 @@ export default {
       for(let conn of this.connections) {
         if(`${conn.dest_step}.in.${conn.dest_input}` == port_name) {
           // Delete that connection
-          let inputs = this.workflow.steps[conn.dest_step].inputs[conn.dest_input];
-          for(let i = 0; i < inputs.length; ++i) {
-            if(typeof inputs[i] == "string") {
-              continue;
-            } else if(
-              inputs[i].step == conn.source_step &&
-              inputs[i].output == conn.source_output
-            ) {
-              inputs.splice(i, 1);
-              // TODO: Notify of removed connection
-              console.log("Removed connection");
-              break;
-            }
-          }
+          this.$emit(
+            'removeconnection',
+            {
+              name: conn.dest_step,
+              input_name: conn.dest_input,
+              source_name: conn.source_step,
+              source_output_name: conn.source_output,
+            },
+          );
 
           // Make new connection from source port
           source_port = `${conn.source_step}.out.${conn.source_output}`;
@@ -189,15 +188,14 @@ export default {
       }
 
       if(min_port !== null) {
-        this.workflow.steps[min_port.step].inputs[min_port.port_name] = [{
-          step: this.newConnection.source_step,
-          output: this.newConnection.source_output,
-        }];
-        // TODO: Notify of new connection (and removed old inputs)
-        console.log(
-          "New connection ",
-          `${this.newConnection.source_step}.${this.newConnection.source_output} - ` +
-          `${min_port.step}.${min_port.port_name}`,
+        this.$emit(
+          'setconnection',
+          {
+            name: min_port.step,
+            input_name: min_port.port_name,
+            source_name: this.newConnection.source_step,
+            source_output_name: this.newConnection.source_output,
+          },
         );
       }
 

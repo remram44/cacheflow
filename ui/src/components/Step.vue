@@ -87,8 +87,14 @@ export default {
       }
     },
     changeInput: function(input_name, event) {
-      // TODO: Notify of input change
-      console.log("Step ", this.name, " input ", input_name, " changed to ", event.target.value);
+      this.$emit(
+        'setinputparameter',
+        {
+          name: this.name,
+          input_name: input_name,
+          value: event.target.value,
+        },
+      );
     },
     mousedown: function(event) {
       document.addEventListener('mouseup', this.mouseup);
