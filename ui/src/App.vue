@@ -38,41 +38,41 @@ export default {
         position: [10, 10],
       }));
     },
-    removeStep: function(name) {
+    removeStep: function(step_id) {
       this.websocket.send(JSON.stringify({
         type: 'workflow_remove_step',
-        step_id: name,
+        step_id,
       }));
     },
     moveStep: function(e) {
-      let {name, position} = e;
+      let {step_id, position} = e;
       this.websocket.send(JSON.stringify({
         type: 'workflow_move_step',
-        step_id: name,
+        step_id,
         position: position,
       }));
     },
     setInputParameter: function(e) {
       this.websocket.send(JSON.stringify({
         type: 'workflow_set_input_parameter',
-        step_id: e['name'],
-        input_name: e['input_name'],
-        value: e['value'],
+        step_id: e.step_id,
+        input_name: e.input_name,
+        value: e.value,
       }));
     },
     setConnection: function(e) {
       this.websocket.send(JSON.stringify({
         type: 'workflow_set_input_connection',
-        step_id: e.name,
+        step_id: e.step_id,
         input_name: e.input_name,
-        source_step_id: e.source_name,
+        source_step_id: e.source_step_id,
         source_output_name: e.source_output_name,
       }));
     },
     removeConnection: function(e) {
       this.websocket.send(JSON.stringify({
         type: 'workflow_remove_inputs',
-        step_id: e.name,
+        step_id: e.step_id,
         input_name: e.input_name,
       }));
     },

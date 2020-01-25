@@ -18,7 +18,7 @@ register = SimpleComponentLoader()
 # Checksum: check a file's checksum (or add to Download?)
 
 
-@register(inputs=['url', 'headers'])
+@register(inputs=['url', 'headers'], outputs=['file'])
 class Download(Component):
     """Downloads a file.
     """

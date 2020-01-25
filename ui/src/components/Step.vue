@@ -31,7 +31,7 @@ import { sortByKey } from '../utils.js'
 
 export default {
   name: 'Step',
-  props: ['name', 'step'],
+  props: ['step'],
   computed: {
     inputs: function() {
       let entries = Object.entries(this.step.inputs);
@@ -63,9 +63,10 @@ export default {
         this.$emit(
           'setport',
           {
-            name: `${this.name}.out.${this.step.outputs[i]}`,
+            key: `${this.step.id}.out.${this.step.outputs[i]}`,
             type: 'output',
-            step: this.name, port_name: this.step.outputs[i],
+            step_id: this.step.id,
+            port_name: this.step.outputs[i],
             position: [rect.right + 6, (rect.top + rect.bottom) / 2],
           },
         );
@@ -78,9 +79,10 @@ export default {
         this.$emit(
           'setport',
           {
-            name: `${this.name}.in.${this.inputs[i][0]}`,
+            key: `${this.step.id}.in.${this.inputs[i][0]}`,
             type: 'input',
-            step: this.name, port_name: this.inputs[i][0],
+            step_id: this.step.id,
+            port_name: this.inputs[i][0],
             position: [rect.left - 6, (rect.top + rect.bottom) / 2],
           },
         );
@@ -90,7 +92,7 @@ export default {
       this.$emit(
         'setinputparameter',
         {
-          name: this.name,
+          step_id: this.step.id,
           input_name: input_name,
           value: event.target.value,
         },
@@ -107,7 +109,7 @@ export default {
     mouseup: function() {
       document.removeEventListener('mouseup', this.mouseup);
       document.removeEventListener('mousemove', this.mousemove);
-      this.$emit('stepmove', {name: this.name, position: this.step.position});
+      this.$emit('stepmove', {step_id: this.step.id, position: this.step.position});
     },
     mousemove: function(event) {
       event.preventDefault();
@@ -136,7 +138,7 @@ export default {
       this.$emit(
         'setport',
         {
-          name: `${this.name}.out.${output}`,
+          key: `${this.step.id}.out.${output}`,
           position: undefined,
         },
       );
@@ -147,7 +149,7 @@ export default {
       this.$emit(
         'setport',
         {
-          name: `${this.name}.in.${input[0]}`,
+          key: `${this.step.id}.in.${input[0]}`,
           position: undefined,
         },
       );

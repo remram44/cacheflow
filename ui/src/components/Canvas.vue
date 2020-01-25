@@ -2,17 +2,17 @@
   <div>
     <div class="canvas">
       <Step
-        v-for="(step, name) in workflow.steps" :key="name"
-        :step="step" :name="name"
+        v-for="step in workflow.steps" :key="step.id"
+        :step="step"
         v-on:setport="setPort"
         v-on:stepmove="moveStep"
-        v-on:remove="removeStep(name)"
+        v-on:remove="removeStep(step.id)"
         v-on:setinputparameter="setInputParameter"
         />
     </div>
     <svg class="canvas ports">
       <Port
-        v-for="port in this.ports" :key="port.name"
+        v-for="port in this.ports" :key="port.key"
         :port="port"
         v-on:startconnection="startConnection"
         v-on:grabconnection="grabConnection"
@@ -86,7 +86,7 @@ export default {
           for(let source of input_array) {
             if(!(typeof source == "string")) {
               // Get position of source output port
-              let skey = `${source.step}.out.${source.output}`;
+              let skey = `${source.step_id}.out.${source.output_name}`;
               if(!(skey in this.ports)) {
                 continue;
               }
@@ -102,8 +102,8 @@ export default {
               // Add connection to array
               connections.push({
                 key: `${skey}.${dkey}`,
-                source_step: source.step, source_output: source.output,
-                dest_step: step_id, dest_input: input_name,
+                source_step_id: source.step_id, source_output_name: source.output_name,
+                dest_step_id: step_id, dest_input_name: input_name,
                 source: spos, dest: dpos,
               });
             }
@@ -116,48 +116,49 @@ export default {
   methods: {
     setPort: function(port) {
       if(port.position !== undefined) {
-        this.$set(this.ports, port.name, port);
+        this.$set(this.ports, port.key, port);
       } else {
-        this.$delete(this.ports, port.name);
+        this.$delete(this.ports, port.key);
       }
     },
     moveStep: function(e) {
       this.$emit('stepmove', e);
     },
-    removeStep: function(name) {
-      this.$emit('stepremove', name);
+    removeStep: function(step_id) {
+      this.$emit('stepremove', step_id);
     },
     setInputParameter: function(e) {
       this.$emit('setinputparameter', e);
     },
-    startConnection: function(port_name) {
-      let source_port = this.ports[port_name];
+    startConnection: function(port_key) {
+      let source_port = this.ports[port_key];
       this.newConnection = {
-        key: `${port_name}.`,
-        source_step: source_port.step, source_output: source_port.port_name,
+        key: `${port_key}.`,
+        source_step_id: source_port.step_id,
+        source_output_name: source_port.port_name,
         source: source_port.position,
         dest: [event.clientX, event.clientY],
       };
       document.addEventListener('mouseup', this.connectionMouseUp);
       document.addEventListener('mousemove', this.connectionMouseMove);
     },
-    grabConnection: function(port_name) {
+    grabConnection: function(port_key) {
       let source_port = null;
       for(let conn of this.connections) {
-        if(`${conn.dest_step}.in.${conn.dest_input}` == port_name) {
+        if(`${conn.dest_step_id}.in.${conn.dest_input_name}` == port_key) {
           // Delete that connection
           this.$emit(
             'removeconnection',
             {
-              name: conn.dest_step,
-              input_name: conn.dest_input,
-              source_name: conn.source_step,
-              source_output_name: conn.source_output,
+              step_id: conn.dest_step_id,
+              input_name: conn.dest_input_name,
+              source_step_id: conn.source_step_id,
+              source_output_name: conn.source_output_name,
             },
           );
 
           // Make new connection from source port
-          source_port = `${conn.source_step}.out.${conn.source_output}`;
+          source_port = `${conn.source_step_id}.out.${conn.source_output_name}`;
 
           break;
         }
@@ -173,8 +174,8 @@ export default {
       // Find closest port
       let min_port = null;
       let min_sqdist = 150;
-      for(let port_name in this.ports) {
-        let port = this.ports[port_name];
+      for(let port_key in this.ports) {
+        let port = this.ports[port_key];
         if(port.type != 'input') {
           continue;
         }
@@ -191,10 +192,10 @@ export default {
         this.$emit(
           'setconnection',
           {
-            name: min_port.step,
+            step_id: min_port.step_id,
             input_name: min_port.port_name,
-            source_name: this.newConnection.source_step,
-            source_output_name: this.newConnection.source_output,
+            source_step_id: this.newConnection.source_step_id,
+            source_output_name: this.newConnection.source_output_name,
           },
         );
       }

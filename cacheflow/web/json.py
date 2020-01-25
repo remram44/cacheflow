@@ -16,8 +16,8 @@ def _inputs_to_json(step):
         for input in inputs:
             if isinstance(input, Output):
                 input_array.append({
-                    'step': input.step_id,
-                    'output': input.output_name,
+                    'step_id': input.step_id,
+                    'output_name': input.output_name,
                 })
             else:
                 input_array.append(input)
@@ -29,6 +29,7 @@ def workflow_to_json(controller):
     steps = {}
     for step in controller.steps.values():
         steps[step.id] = {
+            'id': step.id,
             'component': step.component_def,
             'inputs': _inputs_to_json(step),
             'outputs': list(step.outputs),

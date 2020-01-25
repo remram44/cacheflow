@@ -13,9 +13,9 @@ export default {
   methods: {
     mousedown: function() {
       if(this.port.type == 'output') {
-        this.$emit('startconnection', this.port.name);
+        this.$emit('startconnection', this.port.key);
       } else {
-        this.$emit('grabconnection', this.port.name);
+        this.$emit('grabconnection', this.port.key);
       }
     },
   },
