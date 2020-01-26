@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 import pkg_resources
@@ -6,7 +7,9 @@ import tornado.iostream
 from tornado.routing import URLSpec
 import tornado.web
 from tornado.websocket import WebSocketHandler
+import webbrowser
 
+from .. import __version__
 from ..base import Step, StepInputConnection, Workflow
 from ..cache import NullCache
 from ..executor import Executor
@@ -164,7 +167,7 @@ class WorkflowView(BaseHandler):
                     break
 
 
-def make_app():
+def make_app(debug=False):
     static_dir = pkg_resources.resource_filename('cacheflow', 'web/ui/static')
     return Application(
         [
@@ -176,9 +179,10 @@ def make_app():
             ),
             URLSpec('/workflow', WorkflowWS),
         ],
+        # TODO: Security settings (CSRF, cookie, single-user auth token)
         xsrf_cookies=False,
         cookie_secret='1234567890',
-        debug=True,
+        debug=debug,
     )
 
 
@@ -187,7 +191,33 @@ def main():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s: %(message)s")
 
-    app = make_app()
-    app.listen(7455, '0.0.0.0')
+    parser = argparse.ArgumentParser(
+        description="Web-based workflow system",
+    )
+    parser.add_argument('--version', action='version',
+                        version='cacheflow version %s' % __version__)
+    parser.add_argument('-p', '--port', default='7455',
+                        help="Port number to listen on")
+    parser.add_argument('-b', '--bind', default='127.0.0.1',
+                        help="Address to bind on")
+    parser.add_argument('--browser', action='store_true', default=True,
+                        help="Open web browser to the application")
+    parser.add_argument('--no-browser', action='store_false', dest='browser',
+                        help="Don't open the web browser")
+    parser.add_argument('--debug', action='store_true', default=False,
+                        help=argparse.SUPPRESS)
+
+    args = parser.parse_args()
+    try:
+        port = int(args.port, 10)
+    except ValueError:
+        return parser.error("Invalid port number")
+
+    url = 'http://localhost:%d/' % port
+
+    app = make_app(debug=args.debug)
+    app.listen(port, args.bind)
     loop = tornado.ioloop.IOLoop.current()
+    if args.browser and not args.debug:
+        loop.call_later(0.01, webbrowser.open, url)
     loop.start()

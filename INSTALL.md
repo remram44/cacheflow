@@ -14,7 +14,7 @@ Set up the web interface:
 * Two choices:
   * If you have NodeJS and Yarn installed, you can install Vue with `npm install -g @vue/cli` and then run the development server with `make serve-local`
   * If you would rather not mess with Node and just use Docker, you can do `make build-image` and run the development server with `make serve`
-* In both cases, you need to run Cacheflow's API server with `poetry run cacheflow-web`. You can then go to [`http://localhost:8000/`](http://localhost:8000/)
+* In both cases, you need to run Cacheflow's API server with `poetry run cacheflow-web --debug`. You can then go to [`http://localhost:8000/`](http://localhost:8000/)
 
 Build for release
 =================
