@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all build-image serve build
 
 all: build-image
 
@@ -10,3 +10,8 @@ serve:
 
 build:
 	docker run -ti --rm -v $(shell pwd):/data -w /data/ui cacheflow-build yarn build
+	rm -rf cacheflow/web/ui
+	mkdir cacheflow/web/ui
+	mkdir cacheflow/web/ui/static
+	cp ui/dist/index.html cacheflow/web/ui/
+	cp -r ui/dist/* cacheflow/web/ui/static/

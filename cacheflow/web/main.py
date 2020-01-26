@@ -1,15 +1,17 @@
 import json
 import logging
-import os
+import pkg_resources
 import tornado.ioloop
-import tornado.web
+import tornado.iostream
 from tornado.routing import URLSpec
+import tornado.web
 from tornado.websocket import WebSocketHandler
 
 from ..base import Step, StepInputConnection, Workflow
 from ..cache import NullCache
 from ..executor import Executor
 from ..storage.controller import WorkflowChangeObserver, WorkflowController
+from .base import BaseHandler
 from .json import workflow_to_json, json_to_actions, action_to_json
 
 
@@ -140,12 +142,40 @@ class WorkflowWS(WebSocketHandler, WorkflowChangeObserver):
         self.write_message(message)
 
 
+class Index(BaseHandler):
+    def get(self):
+        return self.redirect(self.reverse_url('workflow_view', 'default'))
+
+
+class WorkflowView(BaseHandler):
+    async def get(self, workflow_name):
+        with pkg_resources.resource_stream(
+                'cacheflow',
+                'web/ui/index.html',
+        ) as fp:
+            while True:
+                chunk = fp.read(4096)
+                try:
+                    self.write(chunk)
+                    await self.flush()
+                except tornado.iostream.StreamClosedError:
+                    return
+                if len(chunk) != 4096:
+                    break
+
+
 def make_app():
+    static_dir = pkg_resources.resource_filename('cacheflow', 'web/ui/static')
     return Application(
         [
+            URLSpec('/', Index),
+            URLSpec('/workflow/([^/]+)', WorkflowView, name='workflow_view'),
+            URLSpec(
+                '/static/(.*)', tornado.web.StaticFileHandler,
+                {'path': static_dir},
+            ),
             URLSpec('/workflow', WorkflowWS),
         ],
-        static_path=os.path.join(os.path.dirname(__name__), '../../ui/dist'),
         xsrf_cookies=False,
         cookie_secret='1234567890',
         debug=True,

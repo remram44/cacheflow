@@ -14,7 +14,17 @@ html, body {
 }
     </style>
     <script>
-window.API_WS_URL = 'ws://localhost:7455';
+<% if(NODE_ENV === 'production') { %>
+  var loc = window.location;
+  if(loc.protocol === 'https:') {
+    window.API_WS_URL = 'wss:';
+  } else {
+    window.API_WS_URL = 'ws:';
+  }
+  window.API_WS_URL += '//' + loc.host;
+<% } else { %>
+  window.API_WS_URL = 'ws://localhost:7455';
+<% } %>
     </script>
   </head>
   <body>

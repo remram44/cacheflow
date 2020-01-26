@@ -36,7 +36,9 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
-include = []
+include = [
+    "cacheflow/web/ui/**",
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
