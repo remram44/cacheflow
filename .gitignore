@@ -1,20 +1,11 @@
-*.py[co]
-.DS_Store
+/cacheflow/web/ui
+/docs/_build
 
 # Packages
 *.egg
 *.egg-info
 dist
 build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib
-lib64
 
 # Installer logs
 pip-log.txt
@@ -31,4 +22,6 @@ nosetests.xml
 # PyCharm
 .idea
 
-/docs/_build
+# Misc
+*.py[co]
+.DS_Store
