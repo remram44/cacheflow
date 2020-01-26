@@ -5,7 +5,7 @@ from .executor import Executor
 __all__ = ['Component', 'ComponentLoader', 'Executor']
 
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 def main():
