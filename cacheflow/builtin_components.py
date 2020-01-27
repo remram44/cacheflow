@@ -56,3 +56,82 @@ class EmptyFile(Component):
         suffix, = inputs.get('suffix', (None,))
         temp_file = TemporaryFile(temp_dir, suffix=suffix)
         self.set_output('file', temp_file)
+
+
+@register(inputs=['file'], outputs=['table'])
+class ReadCsv(Component):
+    """Read a CSV file into a DataFrame.
+    """
+    def execute(self, inputs, **kwargs):
+        import pandas
+
+        file, = inputs['file']
+        self.set_output('table', pandas.read_csv(file.name))
+
+
+@register(inputs=['table', 'columns'], outputs=['table'])
+class FilterColumns(Component):
+    """Get specific columns from a DataFrame.
+    """
+    def execute(self, inputs, **kwargs):
+        table, = inputs['table']
+        columns, = inputs['columns']
+        TODO
+
+
+@register(inputs=['table', 'expression'], outputs=['table'])
+class FilterRows(Component):
+    """Filter rows using a Python expression.
+    """
+    def execute(self, inputs, **kwargs):
+        table, = inputs['table']
+        expression, = inputs['expression']
+        TODO
+
+
+@register(
+    inputs=['left_table', 'right_table', 'left_column', 'right_column'],
+    outputs=['table'],
+)
+class Join(Component):
+    """Join two tables.
+    """
+    def execute(self, inputs, **kwargs):
+        left_table, = inputs['left_table']
+        right_table, = inputs['right_table']
+        left_column, = inputs.get('left_column', (None,))
+        right_column, = inputs.get('right_column', (None,))
+
+        if left_column is None and right_column is None:
+            raise KeyError("Both left_column and right_column are unspecified")
+        elif left_column is not None and right_column is None:
+            right_column = left_column
+        elif left_column is None and right_column is not None:
+            left_column = right_column
+
+        result = left_table.join(right_table, TODO)
+        self.set_output('table', result)
+
+
+@register(inputs=['table', 'target_column'], outputs=['model'])
+class TrainSvm(Component):
+    """Train an SVM model.
+    """
+    def execute(self, inputs, **kwargs):
+        from sklearn.svm import SVC
+
+        table, = inputs['table']
+        model = SVC()
+        model.fit(TODO)
+        self.set_output('model', model)
+
+
+@register(inputs=['table', 'model'], outputs=['table'])
+class Predict(Component):
+    """Use a trained model.
+    """
+    def execute(self, inputs, **kwargs):
+        table, = inputs['table']
+        model, = inputs['model']
+        result = model.predict(TODO)
+        self.set_output('table, result')
