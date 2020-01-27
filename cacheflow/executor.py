@@ -9,6 +9,11 @@ from .cache.core import hash_value, UNHASHABLE, Pickling
 logger = logging.getLogger(__name__)
 
 
+class ExecutionObserver(object):
+    def on_workflow_step_executed(self):
+        pass
+
+
 def hash_dict_list(dct, pickling):
     return {
         k: [(e, hash_value(e, pickling)) for e in v]
@@ -27,6 +32,14 @@ class Executor(object):
 
         self.temp_dir = tempfile.TemporaryDirectory(prefix='cacheflow_')
         self.pickling = Pickling(self.temp_dir.name)
+
+        self._execution_observers = set()
+
+    def add_execution_observer(self, observer):
+        self._execution_observers.add(observer)
+
+    def remove_execution_observer(self, observer):
+        self._execution_observers.discard(observer)
 
     def add_components_from_entrypoint(self):
         for entry_point in iter_entry_points('cacheflow'):

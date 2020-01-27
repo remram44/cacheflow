@@ -4,7 +4,7 @@ from ..base import Step, StepInputConnection
 from . import actions
 
 
-class WorkflowChangeObserver(object):
+class ChangeObserver(object):
     def on_workflow_action(self, action):
         pass
 

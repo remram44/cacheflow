@@ -2,14 +2,15 @@ import json
 import logging
 from tornado.websocket import WebSocketHandler
 
-from ..storage.controller import WorkflowChangeObserver
+from ..executor import ExecutionObserver
+from ..storage.controller import ChangeObserver
 from .json import workflow_to_json, json_to_actions, action_to_json
 
 
 logger = logging.getLogger(__name__)
 
 
-class WorkflowWS(WebSocketHandler, WorkflowChangeObserver):
+class WorkflowWS(WebSocketHandler, ChangeObserver, ExecutionObserver):
     def open(self):
         self.application.controller.add_change_observer(self)
         logger.info("WebSocket connected")
@@ -77,3 +78,6 @@ class WorkflowWS(WebSocketHandler, WorkflowChangeObserver):
                 ),
             }
         self.write_message(message)
+
+    def on_workflow_step_executed(self):
+        pass
