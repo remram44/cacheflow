@@ -3,7 +3,7 @@
     <div class="canvas">
       <Step
         v-for="step in workflow.steps" :key="step.id"
-        :step="step"
+        :step="step" :result="step_results[step.id]"
         v-on:setport="setPort"
         v-on:stepmove="moveStep"
         v-on:remove="removeStep(step.id)"
@@ -39,7 +39,7 @@ import { sortByKey } from '../utils.js'
 
 export default {
   name: 'Canvas',
-  props: ['workflow'],
+  props: ['workflow', 'step_results'],
   data: function() {
     return {
       ports: {},

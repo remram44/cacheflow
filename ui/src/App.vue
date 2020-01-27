@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Canvas
-      :workflow="workflow"
+      :workflow="workflow" :step_results="step_results"
       v-on:stepremove="removeStep" v-on:stepmove="moveStep"
       v-on:setinputparameter="setInputParameter"
       v-on:setconnection="setConnection"
@@ -27,6 +27,7 @@ export default {
       workflow: {
         steps: {},
       },
+      step_results: {},
       components: [],
     };
   },
@@ -95,6 +96,12 @@ export default {
       let data = JSON.parse(event.data);
       if(data.type == 'workflow') {
         self.workflow = data.workflow;
+        // Remove the results for steps that no longer exist
+        for(let step_id of Object.keys(self.step_results)) {
+          if(!self.workflow.steps.hasOwnProperty(step_id)) {
+            delete self.step_results[step_id];
+          }
+        }
       } else if(data.type == 'components_add') {
         for(let component of data.components) {
           self.components.push(component);
@@ -102,6 +109,16 @@ export default {
       // TODO: Implement other incremental actions
       } else if(data.type == 'workflow_remove_step') {
         self.$delete(self.workflow.steps, data.step_id);
+      } else if(data.type == 'step_executed') {
+        self.step_results[data.step_id] = {
+          status: 'executed',
+          step_html: data.step_html,
+        };
+      } else if(data.type == 'step_error') {
+        self.step_results[data.step_id] = {
+          status: 'error',
+          step_html: data.step_html,
+        };
       } else {
         console.error("Unrecognized message from server: ", data);
       }

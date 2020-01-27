@@ -1,13 +1,16 @@
 <template>
   <div
-    class="step" :style=style
+    class="step" :class="{ 'step-error': isError, 'step-success': isExecuted }"
+    :style="style"
     v-on:mousedown.left.self.prevent="mousedown"
     >
     <a class="close" v-on:click.self.prevent="remove">[x]</a>
     <h2>{{step.component.type}}</h2>
+    <div v-if="resultHtml" class="result">
+      <span v-html="resultHtml"></span>
+    </div>
     <table class="outputs">
       <tr v-for="output of outputs" :key="output">
-        <td>???</td>
         <td>{{output}}</td>
       </tr>
     </table>
@@ -31,7 +34,7 @@ import { sortByKey } from '../utils.js'
 
 export default {
   name: 'Step',
-  props: ['step'],
+  props: ['step', 'result'],
   computed: {
     inputs: function() {
       let entries = Object.entries(this.step.inputs);
@@ -52,6 +55,18 @@ export default {
     },
     style: function() {
       return `left: ${this.step.position[0]}px; top: ${this.step.position[1]}px;`;
+    },
+    isExecuted: function() {
+      return this.result && this.result.status == 'executed';
+    },
+    isError: function() {
+      return this.result && this.result.status == 'error';
+    },
+    resultHtml: function() {
+      if(this.result) {
+        return this.result.step_html;
+      }
+      return null;
     },
   },
   methods: {
