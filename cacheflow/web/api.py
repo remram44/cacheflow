@@ -51,6 +51,10 @@ class WorkflowWS(WebSocketHandler, WorkflowChangeObserver):
             )
             for action in actions_array:
                 self.application.controller.apply_action(action)
+
+            # Execute the workflow
+            if actions_array:
+                self.application.execute_workflow()
         else:
             logger.error("Got invalid message %r", type_)
 

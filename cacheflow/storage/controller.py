@@ -24,6 +24,11 @@ class WorkflowController(object):
         # Invalidate cache
         self._connected_outputs_cache = None
 
+    def execute(self):
+        workflow = self.current_workflow
+        self.executor.load_workflow(workflow)
+        self.executor.execute()
+
     @property
     def steps(self):
         return _StepsProxy(self)
@@ -33,6 +38,14 @@ class WorkflowController(object):
 
     def remove_change_observer(self, observer):
         self._change_observers.discard(observer)
+
+    def add_execution_observer(self, observer):
+        if self.executor is not None:
+            self.executor.add_execution_observer(observer)
+
+    def remove_execution_observer(self, observer):
+        if self.executor is not None:
+            self.executor.remove_execution_observer(observer)
 
     @property
     def _connected_outputs(self):

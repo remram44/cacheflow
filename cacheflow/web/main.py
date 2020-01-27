@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import pkg_resources
 import tornado.ioloop
@@ -73,6 +74,37 @@ class Application(tornado.web.Application):
         )
 
         self.controller = WorkflowController(workflow, executor)
+
+        self._workflow_execution = None
+        self._workflow_needs_execution = False
+
+    def execute_workflow(self):
+        if self._workflow_execution is not None:
+            # _execute_workflow() will be called by _execution_callback()
+            self._workflow_needs_execution = True
+            logger.info("Delayed workflow execution, already in progress")
+        else:
+            self._execute_workflow()
+
+    def _execute_workflow(self):
+        logger.info("Workflow execution starting")
+        self._workflow_execution = asyncio.get_event_loop().run_in_executor(
+            None,
+            self.controller.execute,
+        )
+        self._workflow_execution.add_done_callback(self._execution_callback)
+
+    def _execution_callback(self, fut):
+        self._workflow_execution = None
+        if self._workflow_needs_execution:
+            self._workflow_needs_execution = False
+            self._execute_workflow()
+        try:
+            fut.result()
+        except Exception:
+            logger.exception("Workflow execution failed")
+        else:
+            logger.info("Workflow execution completed")
 
 
 class Index(BaseHandler):
