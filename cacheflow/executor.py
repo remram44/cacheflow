@@ -1,5 +1,6 @@
 import logging
 from pkg_resources import iter_entry_points
+import sys
 import tempfile
 
 from .base import StepInputConnection
@@ -10,7 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class ExecutionObserver(object):
-    def on_workflow_step_executed(self):
+    def on_workflow_step_executed(self, step_id, html):
+        pass
+
+    def on_workflow_step_error(self, step_id, exc_info, html):
         pass
 
 
@@ -40,6 +44,14 @@ class Executor(object):
 
     def remove_execution_observer(self, observer):
         self._execution_observers.discard(observer)
+
+    def notify_step_executed(self, step_id, html):
+        for observer in self._execution_observers:
+            observer.on_workflow_step_executed(step_id, html)
+
+    def notify_step_error(self, step_id, exc_info, html):
+        for observer in self._execution_observers:
+            observer.on_workflow_step_error(step_id, exc_info, html)
 
     def add_components_from_entrypoint(self):
         for entry_point in iter_entry_points('cacheflow'):
@@ -250,6 +262,7 @@ class Executor(object):
                     pass
                 else:
                     logger.info("Got step %r from cache", step.id)
+                    component.outputs = outputs
             if outputs is None:
                 logger.info("Executing step %r", step.id)
                 try:
@@ -261,15 +274,22 @@ class Executor(object):
                         temp_dir=self.temp_dir.name, globals=globals,
                     )
                 except Exception:
+                    exc_info = sys.exc_info()
                     logger.exception("Got exception running component %r",
                                      component)
-                    raise
+                    self.notify_step_error(
+                        step.id,
+                        exc_info=exc_info,
+                        html=component.get_error_html(exc_info),
+                    )
+                    continue
                 outputs = component.outputs
                 if step_hash != UNHASHABLE:
                     self.cache.store(
                         (step_hash, 'outputs'), outputs,
                         pickling=self.pickling,
                     )
+                self.notify_step_executed(step.id, html=component.get_html())
 
             # Store global results
             if step.id in sinks:
@@ -299,6 +319,5 @@ class Executor(object):
         if to_execute:
             logger.error("Couldn't execute any step, %d remain",
                          len(to_execute))
-            raise RuntimeError("Can't execute remaining steps")
 
         return results

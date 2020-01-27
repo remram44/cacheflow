@@ -79,5 +79,16 @@ class WorkflowWS(WebSocketHandler, ChangeObserver, ExecutionObserver):
             }
         self.write_message(message)
 
-    def on_workflow_step_executed(self):
-        pass
+    def on_workflow_step_executed(self, step_id, html):
+        self.write_message({
+            'type': 'step_executed',
+            'step_id': step_id,
+            'step_html': html,
+        })
+
+    def on_workflow_step_error(self, step_id, exc_info, html):
+        self.write_message({
+            'type': 'step_error',
+            'step_id': step_id,
+            'step_html': html,
+        })

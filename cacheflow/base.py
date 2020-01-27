@@ -59,6 +59,9 @@ class Component(object):
         """
         raise NotImplementedError
 
+    def get_html(self):
+        return None
+
     @classmethod
     def compute_hash(cls, input_hashes):
         fqdn = ('%s.%s\n' % (cls.__module__, cls.__name__))
