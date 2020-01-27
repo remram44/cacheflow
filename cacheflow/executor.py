@@ -9,21 +9,6 @@ from .cache.core import hash_value, UNHASHABLE, Pickling
 logger = logging.getLogger(__name__)
 
 
-class InternalCache(object):
-    def __init__(self, cache, step_hash):
-        self.cache = cache
-        self.step_hash = step_hash
-
-    def has_key(self, key):
-        return self.cache.has_key((self.step_hash, 'internal', key))
-
-    def retrieve(self, key):
-        return self.cache.retrieve((self.step_hash, 'internal', key))
-
-    def store(self, key, value):
-        self.cache.store((self.step_hash, 'internal', key), value)
-
-
 def hash_dict_list(dct, pickling):
     return {
         k: [(e, hash_value(e, pickling)) for e in v]
@@ -241,10 +226,6 @@ class Executor(object):
             step_hash = component.compute_hash({
                 n: [e[1] for e in v] for n, v in inputs.items()
             })
-            internal_cache = InternalCache(
-                self.cache,
-                step_hash,
-            )
             outputs = None
             if step_hash != UNHASHABLE:
                 try:
@@ -265,7 +246,6 @@ class Executor(object):
                             for n, v in inputs.items()
                         },
                         temp_dir=self.temp_dir.name, globals=globals,
-                        cache=internal_cache,
                     )
                 except Exception:
                     logger.exception("Got exception running component %r",
