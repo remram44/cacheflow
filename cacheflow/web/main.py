@@ -97,18 +97,27 @@ class WorkflowView(BaseHandler):
                     break
 
 
+class CachedStaticHandler(tornado.web.StaticFileHandler):
+    def get_cache_time(self, path, modified, mime_type):
+        logger.warning("%s", path)
+        if path.startswith(('css/', 'js/')):
+            return self.CACHE_MAX_AGE
+        return super(CachedStaticHandler, self).get_cache_time(
+            path, modified, mime_type,
+        )
+
+
 def make_app(debug=False):
     static_dir = pkg_resources.resource_filename('cacheflow', 'web/ui/static')
     return Application(
         [
             URLSpec('/', Index),
             URLSpec('/workflow/([^/]+)', WorkflowView, name='workflow_view'),
-            URLSpec(
-                '/static/(.*)', tornado.web.StaticFileHandler,
-                {'path': static_dir},
-            ),
             URLSpec('/workflow', api.WorkflowWS),
         ],
+        static_path=static_dir,
+        static_url_prefix='/static/',
+        static_handler_class=CachedStaticHandler,
         # TODO: Security settings (CSRF, cookie, single-user auth token)
         xsrf_cookies=False,
         cookie_secret='1234567890',
@@ -147,6 +156,7 @@ def main():
 
     app = make_app(debug=args.debug)
     app.listen(port, args.bind)
+    # TODO: xheaders
     loop = tornado.ioloop.IOLoop.current()
     if args.browser and not args.debug:
         loop.call_later(0.01, webbrowser.open, url)
