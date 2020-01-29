@@ -18,6 +18,7 @@ build:
 	mkdir cacheflow/web/ui/static
 	cp ui/dist/index.html cacheflow/web/ui/
 	cp -r ui/dist/* cacheflow/web/ui/static/
+	rm cacheflow/web/ui/static/index.html
 
 build-local:
 	cd ui && yarn build
@@ -26,3 +27,4 @@ build-local:
 	mkdir cacheflow/web/ui/static
 	cp ui/dist/index.html cacheflow/web/ui/
 	cp -r ui/dist/* cacheflow/web/ui/static/
+	rm cacheflow/web/ui/static/index.html
