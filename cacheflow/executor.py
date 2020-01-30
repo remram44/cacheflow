@@ -1,3 +1,4 @@
+import enum
 import logging
 from pkg_resources import iter_entry_points
 import tempfile
@@ -7,6 +8,11 @@ from .cache.core import hash_value, UNHASHABLE, Pickling
 
 
 logger = logging.getLogger(__name__)
+
+
+class StepStatus(enum.Enum):
+    ERROR = 'error'
+    SUCCESS = 'success'
 
 
 def hash_dict_list(dct, pickling):
@@ -24,6 +30,7 @@ class Executor(object):
         self.workflow = None
         self.steps = {}
         self.step_hashes = ()
+        self.step_status = {}
 
         self.temp_dir = tempfile.TemporaryDirectory(prefix='cacheflow_')
         self.pickling = Pickling(self.temp_dir.name)
@@ -76,6 +83,7 @@ class Executor(object):
         if outdated_steps:
             for step_id in outdated_steps:
                 del self.steps[step_id]
+                self.step_status.pop(step_id, None)
             logger.info("Discarded %d old steps", len(outdated_steps))
 
         # Load all steps
@@ -218,45 +226,51 @@ class Executor(object):
             to_execute.discard(step.id)
 
             # Run the step
+            # FIXME: Don't run if already up to date
             component = self.steps[step.id]
-            inputs = step_inputs[step.id][1]
-            for k, v in inputs.items():
-                if len(v) > 1:
-                    raise ValueError("Multiple values for input '%s'" % k)
-            step_hash = component.compute_hash({
-                n: [e[1] for e in v] for n, v in inputs.items()
-            })
-            outputs = None
-            if step_hash != UNHASHABLE:
-                try:
-                    outputs = self.cache.retrieve(
-                        (step_hash, 'outputs'),
-                        pickling=self.pickling,
-                    )
-                except KeyError:
-                    pass
-                else:
-                    logger.info("Got step %r from cache", step.id)
-            if outputs is None:
-                logger.info("Executing step %r", step.id)
-                try:
-                    component.execute(
-                        inputs={
-                            n: [e[0] for e in v]
-                            for n, v in inputs.items()
-                        },
-                        temp_dir=self.temp_dir.name, globals=globals,
-                    )
-                except Exception:
-                    logger.exception("Got exception running component %r",
-                                     component)
-                    raise
-                outputs = component.outputs
+            if step.id not in self.step_status:
+                inputs = step_inputs[step.id][1]
+                for k, v in inputs.items():
+                    if len(v) > 1:
+                        raise ValueError("Multiple values for input '%s'" % k)
+                step_hash = component.compute_hash({
+                    n: [e[1] for e in v] for n, v in inputs.items()
+                })
+                outputs = None
                 if step_hash != UNHASHABLE:
-                    self.cache.store(
-                        (step_hash, 'outputs'), outputs,
-                        pickling=self.pickling,
-                    )
+                    try:
+                        outputs = self.cache.retrieve(
+                            (step_hash, 'outputs'),
+                            pickling=self.pickling,
+                        )
+                    except KeyError:
+                        pass
+                    else:
+                        logger.info("Got step %r from cache", step.id)
+                if outputs is None:
+                    logger.info("Executing step %r", step.id)
+                    try:
+                        component.execute(
+                            inputs={
+                                n: [e[0] for e in v]
+                                for n, v in inputs.items()
+                            },
+                            temp_dir=self.temp_dir.name, globals=globals,
+                        )
+                    except Exception:
+                        logger.exception("Got exception running component %r",
+                                         component)
+                        self.step_status[step.id] = StepStatus.ERROR
+                        raise
+                    outputs = component.outputs
+                    self.step_status[step.id] = StepStatus.SUCCESS
+                    if step_hash != UNHASHABLE:
+                        self.cache.store(
+                            (step_hash, 'outputs'), outputs,
+                            pickling=self.pickling,
+                        )
+            else:
+                outputs = component.outputs
 
             # Store global results
             if step.id in sinks:
