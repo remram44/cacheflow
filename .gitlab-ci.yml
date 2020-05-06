@@ -18,4 +18,5 @@ run_tests:
     - (cd ui && yarnpkg run lint)
     - (cd ui && yarnpkg build)
     - mkdir cacheflow/web/ui cacheflow/web/ui/static
-    - mv ui/dist/index.html cacheflow/web/ui/ && mv ui/dist/* cacheflow/web/ui/static/
+    - mv ui/dist/index.html cacheflow/web/ui/
+    - mv ui/dist/* cacheflow/web/ui/static/
