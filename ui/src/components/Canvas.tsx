@@ -1,14 +1,11 @@
 import React from 'react';
 import './Canvas.css';
-import { Workflow } from '../workflow';
+import * as workflow from '../workflow';
 import { sortByKey } from '../utils';
-
-function Step(props: {}) {
-  return <></>;
-}
+import { Step } from './Step';
 
 interface CanvasProps {
-  workflow: Workflow;
+  workflow: workflow.Workflow;
 
   onStepAdd: () => void;
   onStepRemove: () => void;
@@ -23,8 +20,6 @@ interface CanvasState {
   ports: Map<string, [number, number]>;
 }
 
-type PortType = 'input' | 'output';
-
 export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
   constructor(props: CanvasProps) {
     super(props);
@@ -37,7 +32,7 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
 
   setPort(
     stepId: string,
-    type: PortType,
+    type: workflow.PortType,
     name: string,
     position: [number, number]
   ) {
@@ -62,7 +57,7 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
           key={step.id}
           step={step}
           onSetPort={(
-            type: PortType,
+            type: workflow.PortType,
             name: string,
             position: [number, number]
           ) => this.setPort(step.id, type, name, position)}
@@ -95,7 +90,73 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
     return connections;
   }
 
+  computeConnections() {
+    // Pre-compute port information
+    const stepOutputIndex: Map<string, Map<string, number>> = new Map();
+    const stepInputIndex: Map<string, Map<string, number>> = new Map();
+    this.props.workflow.steps.forEach(step => {
+      // Index outputs
+      {
+        let count = 0;
+        const outputIndexes = new Map();
+        for (const output of step.outputs) {
+          outputIndexes.set(output, count++);
+        }
+        stepOutputIndex.set(step.id, outputIndexes);
+      }
+
+      // Index inputs
+      {
+        let count = 0;
+        const inputs = Object.entries(step.inputs);
+        sortByKey(inputs, o => o[0]);
+        const inputIndexes = new Map();
+        for (const [inputName] of inputs) {
+          inputIndexes.set(inputName, count++);
+        }
+        stepInputIndex.set(step.id, inputIndexes);
+      }
+    });
+
+    // For each step, for each of its input, for each of its connection
+    const connections: Array<{}> = [];
+    this.props.workflow.steps.forEach(step => {
+      step.inputs.forEach((inputArray, inputName) => {
+        inputArray.forEach(input => {
+          if (input.type === 'connection') {
+            // Get position of source output port
+            const skey = `${input.step_id}.output.${input.output_name}`;
+            const spos = this.state.ports.get(skey);
+            if (!spos) {
+              return;
+            }
+
+            // Get position of destination input port
+            const dkey = `${step.id}.input.${inputName}`;
+            const dpos = this.state.ports.get(dkey);
+            if (!dpos) {
+              return;
+            }
+
+            // Add connection to array
+            connections.push({
+              key: `${skey}.${dkey}`,
+              source_step_id: input.step_id,
+              source_output_name: input.output_name,
+              dest_step_id: step.id,
+              dest_input_name: inputName,
+              source: spos,
+              dest: dpos,
+            });
+          }
+        });
+      });
+    });
+    return connections;
+  }
+
   render() {
+    const connections = this.computeConnections();
     return (
       <>
         <div className="canvas">{this.renderSteps()}</div>
