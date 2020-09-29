@@ -1,0 +1,24 @@
+div.canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+}
+
+svg.canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+svg.ports {
+  z-index: 14;
+  pointer-events: none;
+}
+
+svg.connections {
+  z-index: 5;
+}
+
