@@ -1,4 +1,5 @@
 import React from 'react';
+import './Step.css';
 import * as workflow from '../workflow';
 
 interface StepProps {
@@ -15,6 +16,7 @@ interface StepProps {
 
 export class Step extends React.PureComponent<StepProps> {
   render() {
+    // TODO: Step box
     return <></>;
   }
 }

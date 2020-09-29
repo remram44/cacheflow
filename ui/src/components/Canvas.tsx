@@ -3,6 +3,8 @@ import './Canvas.css';
 import * as workflow from '../workflow';
 import { sortByKey } from '../utils';
 import { Step } from './Step';
+import { Port } from './Port';
+import { Connection } from './Connection';
 
 interface CanvasProps {
   workflow: workflow.Workflow;
@@ -23,6 +25,8 @@ interface CanvasState {
 export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
   constructor(props: CanvasProps) {
     super(props);
+
+    this.state = { ports: new Map() };
 
     this.setPort = this.setPort.bind(this);
     this.moveStep = this.moveStep.bind(this);
@@ -48,47 +52,6 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
   removeStep() {}
 
   setInputParameter() {}
-
-  renderSteps() {
-    const steps: JSX.Element[] = [];
-    this.props.workflow.steps.forEach(step => {
-      steps.push(
-        <Step
-          key={step.id}
-          step={step}
-          onSetPort={(
-            type: workflow.PortType,
-            name: string,
-            position: [number, number]
-          ) => this.setPort(step.id, type, name, position)}
-          onMove={this.moveStep}
-          onRemove={this.removeStep}
-          onSetInputParameter={this.setInputParameter}
-        />
-      );
-    });
-    return steps;
-  }
-
-  renderPorts() {
-    const ports: JSX.Element[] = [];
-    /*this.getPorts().forEach((port) => {
-      ports.push(
-        <Port
-          key={port.key}
-        />
-      );
-    });*/
-    return ports;
-  }
-
-  renderConnections() {
-    const connections: JSX.Element[] = [];
-    /*this.getConnections().forEach((connection) => {
-      connections.push(<></>);
-    });*/
-    return connections;
-  }
 
   computeConnections() {
     // Pre-compute port information
@@ -155,8 +118,45 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
     return connections;
   }
 
+  renderSteps() {
+    const steps: JSX.Element[] = [];
+    this.props.workflow.steps.forEach(step => {
+      steps.push(
+        <Step
+          key={step.id}
+          step={step}
+          onSetPort={(
+            type: workflow.PortType,
+            name: string,
+            position: [number, number]
+          ) => this.setPort(step.id, type, name, position)}
+          onMove={this.moveStep}
+          onRemove={this.removeStep}
+          onSetInputParameter={this.setInputParameter}
+        />
+      );
+    });
+    return steps;
+  }
+
+  renderPorts() {
+    const ports: JSX.Element[] = [];
+    this.state.ports.forEach((position, key) => {
+      ports.push(<Port key={key} position={position} />);
+    });
+    return ports;
+  }
+
+  renderConnections() {
+    const connectionsList = this.computeConnections();
+    const connections: JSX.Element[] = [];
+    connectionsList.forEach(connection => {
+      connections.push(<Connection />);
+    });
+    return connections;
+  }
+
   render() {
-    const connections = this.computeConnections();
     return (
       <>
         <div className="canvas">{this.renderSteps()}</div>
