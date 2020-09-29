@@ -1,0 +1,5 @@
+path.connection {
+  stroke: black;
+  fill: none;
+  z-index: 10;
+}
