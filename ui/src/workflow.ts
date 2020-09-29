@@ -15,7 +15,9 @@ export interface Step {
 
 export type PortType = 'input' | 'output';
 
-export interface ComponentDef {}
+export interface ComponentDef {
+  type?: string;
+}
 
 export interface StepInputConnection {
   type: 'connection';

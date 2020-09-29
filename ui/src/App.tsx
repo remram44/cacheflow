@@ -1,19 +1,49 @@
 import React from 'react';
-import { Workflow } from './workflow';
+import * as workflow from './workflow';
 import { Canvas } from './components/Canvas';
 
 interface AppState {
-  workflow: Workflow;
+  workflow: workflow.Workflow;
 }
 
 export class App extends React.PureComponent<{}, AppState> {
   constructor(props: {}) {
     super(props);
-    const workflow = {
-      meta: {},
-      steps: new Map(),
+    const param: workflow.StepInputConstant = {
+      type: 'constant',
+      value: 'fast',
     };
-    this.state = { workflow };
+    const conn: workflow.StepInputConnection = {
+      type: 'connection',
+      step_id: 'step1',
+      output_name: 'data',
+    };
+    const wf: workflow.Workflow = {
+      meta: {},
+      steps: new Map([
+        [
+          'step1',
+          {
+            id: 'step1',
+            component: { type: 'data' },
+            inputs: new Map([['function', [param]]]),
+            outputs: ['data'],
+            position: [20, 50],
+          },
+        ],
+        [
+          'step2',
+          {
+            id: 'step2',
+            component: { type: 'optimize' },
+            inputs: new Map([['data', [conn]]]),
+            outputs: [],
+            position: [400, 50],
+          },
+        ],
+      ]),
+    };
+    this.state = { workflow: wf };
 
     this.addStep = this.addStep.bind(this);
     this.removeStep = this.removeStep.bind(this);

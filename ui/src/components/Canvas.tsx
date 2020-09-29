@@ -19,7 +19,17 @@ interface CanvasProps {
 
 interface CanvasState {
   // Port positions reported from Step, used to position Port and Connection
-  ports: Map<string, [number, number]>;
+  ports: Map<string, [workflow.PortType, [number, number]]>;
+}
+
+interface ConnectionSpec {
+  key: string;
+  sourceStepId: string;
+  sourceOutputName: string;
+  destStepId: string;
+  destInputName: string;
+  source: [number, number];
+  dest: [number, number];
 }
 
 export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
@@ -40,10 +50,24 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
     name: string,
     position: [number, number]
   ) {
+    console.log(`setPort(${stepId}, ${type}, ${name})`);
+    const key = `${stepId}.${type}.${name}`;
+    const prevEntry = this.state.ports.get(key);
+    const prevPosition = prevEntry && prevEntry[1];
+    if (!position && !prevPosition) {
+      return;
+    }
+    if (
+      position &&
+      prevPosition &&
+      (position[0] === prevPosition[0] || position[1] === prevPosition[1])
+    ) {
+      return;
+    }
     this.setState(prevState => {
       const ports = new Map(prevState.ports);
-      ports.set(`${stepId}.${type}.${name}`, position);
-      return { ports, ...prevState };
+      ports.set(key, [type, position]);
+      return { ports };
     });
   }
 
@@ -82,15 +106,17 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
     });
 
     // For each step, for each of its input, for each of its connection
-    const connections: Array<{}> = [];
+    const connections: Array<ConnectionSpec> = [];
     this.props.workflow.steps.forEach(step => {
       step.inputs.forEach((inputArray, inputName) => {
         inputArray.forEach(input => {
           if (input.type === 'connection') {
+            console.log('CONNECTION!');
             // Get position of source output port
             const skey = `${input.step_id}.output.${input.output_name}`;
             const spos = this.state.ports.get(skey);
             if (!spos) {
+              console.log('missing ', skey);
               return;
             }
 
@@ -98,23 +124,25 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
             const dkey = `${step.id}.input.${inputName}`;
             const dpos = this.state.ports.get(dkey);
             if (!dpos) {
+              console.log('missing ', dkey);
               return;
             }
 
             // Add connection to array
             connections.push({
               key: `${skey}.${dkey}`,
-              source_step_id: input.step_id,
-              source_output_name: input.output_name,
-              dest_step_id: step.id,
-              dest_input_name: inputName,
-              source: spos,
-              dest: dpos,
+              sourceStepId: input.step_id,
+              sourceOutputName: input.output_name,
+              destStepId: step.id,
+              destInputName: inputName,
+              source: spos[1],
+              dest: dpos[1],
             });
           }
         });
       });
     });
+    console.log('Connections: ', connections);
     return connections;
   }
 
@@ -125,7 +153,7 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
         <Step
           key={step.id}
           step={step}
-          onSetPort={(
+          setPort={(
             type: workflow.PortType,
             name: string,
             position: [number, number]
@@ -141,8 +169,8 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
 
   renderPorts() {
     const ports: JSX.Element[] = [];
-    this.state.ports.forEach((position, key) => {
-      ports.push(<Port key={key} position={position} />);
+    this.state.ports.forEach(([type, position], key) => {
+      ports.push(<Port key={key} type={type} position={position} />);
     });
     return ports;
   }
@@ -151,7 +179,13 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
     const connectionsList = this.computeConnections();
     const connections: JSX.Element[] = [];
     connectionsList.forEach(connection => {
-      connections.push(<Connection />);
+      connections.push(
+        <Connection
+          key={connection.key}
+          source={connection.source}
+          dest={connection.dest}
+        />
+      );
     });
     return connections;
   }
