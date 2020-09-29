@@ -49,9 +49,14 @@
   padding: 0 2px 0 2px;
 }
 
-.step a.close {
+.step button.close {
   position: absolute;
   right: 6px;
   top: 6px;
   pointer-events: auto;
+
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }

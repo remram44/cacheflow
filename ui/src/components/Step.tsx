@@ -114,9 +114,9 @@ export class Step extends React.PureComponent<StepProps> {
 
     return (
       <div className="step" style={style} onMouseDown={this.onMouseDown}>
-        <a className="close" onClick={this.remove}>
+        <button className="close" onClick={this.remove}>
           [x]
-        </a>
+        </button>
         <h2>{this.props.step.component.type}</h2>
         <table className="outputs" ref={this.outputsRef}>
           <tbody>
