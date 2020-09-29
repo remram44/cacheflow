@@ -8,10 +8,12 @@ export interface Meta {}
 export interface Step {
   id: string;
   component: ComponentDef;
-  inputs: Map<string, StepInput>;
+  inputs: Map<string, StepInput[]>;
   outputs: string[];
   position: [number, number];
 }
+
+export type PortType = 'input' | 'output';
 
 export interface ComponentDef {}
 
