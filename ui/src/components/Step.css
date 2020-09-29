@@ -1,0 +1,57 @@
+.step {
+  position: absolute;
+  width: 200px;
+  border: 2px solid black;
+  border-radius: 15px;
+  padding: 6px;
+  z-index: 10;
+  background-color: white;
+}
+
+.step * {
+  pointer-events: none;
+}
+
+.step h2 {
+  text-align: center;
+  margin: 0;
+  height: 32px;
+}
+
+.step td {
+  font-size: 0.85rem;
+}
+
+.step input {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.step table.inputs {
+  margin-right: auto;
+  padding: 0;
+  border-collapse: collapse;
+}
+
+.step table.inputs tr, .step table.inputs td {
+  padding: 0 2px 0 2px;
+}
+
+.step table.outputs {
+  margin-left: auto;
+  padding: 0;
+  border-collapse: collapse;
+}
+
+.step table.outputs tr, .step table.outputs td {
+  padding: 0 2px 0 2px;
+}
+
+.step a.close {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  pointer-events: auto;
+}
