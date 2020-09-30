@@ -9,17 +9,37 @@ import { Connection } from './Connection';
 interface CanvasProps {
   workflow: workflow.Workflow;
 
-  onStepAdd: () => void;
-  onStepRemove: () => void;
-  onStepMove: () => void;
-  onSetInputParameter: () => void;
-  onSetConnection: () => void;
-  onRemoveConnection: () => void;
+  onStepRemove: (stepId: string) => void;
+  onStepMove: (stepId: string, position: [number, number]) => void;
+  onSetInputParameter: (
+    stepId: string,
+    inputName: string,
+    value: string
+  ) => void;
+  onSetConnection: (
+    fromStepId: string,
+    fromOutputName: string,
+    toStepId: string,
+    toInputName: string
+  ) => void;
+  onRemoveConnection: (
+    fromStepId: string,
+    fromOutputName: string,
+    toStepId: string,
+    toInputName: string
+  ) => void;
 }
 
 interface CanvasState {
   // Port positions reported from Step, used to position Port and Connection
-  ports: Map<string, [workflow.PortType, [number, number]]>;
+  ports: Map<string, PortSpec>;
+}
+
+interface PortSpec {
+  stepId: string;
+  name: string;
+  type: workflow.PortType;
+  position: [number, number];
 }
 
 interface ConnectionSpec {
@@ -39,42 +59,42 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
     this.state = { ports: new Map() };
 
     this.setPort = this.setPort.bind(this);
-    this.moveStep = this.moveStep.bind(this);
-    this.removeStep = this.removeStep.bind(this);
-    this.setInputParameter = this.setInputParameter.bind(this);
+    this.grabPort = this.grabPort.bind(this);
   }
 
-  setPort(
-    stepId: string,
-    type: workflow.PortType,
-    name: string,
-    position: [number, number]
-  ) {
-    const key = `${stepId}.${type}.${name}`;
-    const prevEntry = this.state.ports.get(key);
-    const prevPosition = prevEntry && prevEntry[1];
-    if (!position && !prevPosition) {
+  setPort(portSpec: PortSpec) {
+    const key = `${portSpec.stepId}.${portSpec.type}.${portSpec.name}`;
+    const prevPort = this.state.ports.get(key);
+    if (!portSpec && !prevPort) {
       return;
     }
     if (
-      position &&
-      prevPosition &&
-      (position[0] === prevPosition[0] || position[1] === prevPosition[1])
+      portSpec &&
+      prevPort &&
+      (portSpec.position[0] === prevPort.position[0] ||
+        portSpec.position[1] === prevPort.position[1])
     ) {
       return;
     }
     this.setState(prevState => {
       const ports = new Map(prevState.ports);
-      ports.set(key, [type, position]);
+      ports.set(key, portSpec);
       return { ports };
     });
   }
 
-  moveStep() {}
+  unsetPort(stepId: string, type: workflow.PortType, name: string) {
+    const key = `${stepId}.${type}.${name}`;
+    this.setState(prevState => {
+      const ports = new Map(prevState.ports);
+      ports.delete(key);
+      return { ports };
+    });
+  }
 
-  removeStep() {}
-
-  setInputParameter() {}
+  grabPort(portSpec: PortSpec) {
+    // TODO: Create or replace connection
+  }
 
   computeConnections() {
     // Pre-compute port information
@@ -131,8 +151,8 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
               sourceOutputName: input.output_name,
               destStepId: step.id,
               destInputName: inputName,
-              source: spos[1],
-              dest: dpos[1],
+              source: spos.position,
+              dest: dpos.position,
             });
           }
         });
@@ -152,10 +172,17 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
             type: workflow.PortType,
             name: string,
             position: [number, number]
-          ) => this.setPort(step.id, type, name, position)}
-          onMove={this.moveStep}
-          onRemove={this.removeStep}
-          onSetInputParameter={this.setInputParameter}
+          ) => this.setPort({ stepId: step.id, type, name, position })}
+          unsetPort={(type: workflow.PortType, name: string) =>
+            this.unsetPort(step.id, type, name)
+          }
+          onMove={(position: [number, number]) =>
+            this.props.onStepMove(step.id, position)
+          }
+          onRemove={() => this.props.onStepRemove(step.id)}
+          onSetInputParameter={(name: string, value: string) =>
+            this.props.onSetInputParameter(step.id, name, value)
+          }
         />
       );
     });
@@ -164,8 +191,15 @@ export class Canvas extends React.PureComponent<CanvasProps, CanvasState> {
 
   renderPorts() {
     const ports: JSX.Element[] = [];
-    this.state.ports.forEach(([type, position], key) => {
-      ports.push(<Port key={key} type={type} position={position} />);
+    this.state.ports.forEach((portSpec, key) => {
+      ports.push(
+        <Port
+          key={key}
+          type={portSpec.type}
+          position={portSpec.position}
+          onGrab={() => this.grabPort(portSpec)}
+        />
+      );
     });
     return ports;
   }

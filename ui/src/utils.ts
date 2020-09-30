@@ -9,3 +9,14 @@ export function sortByKey<T>(array: T[], key: (value: T) => {}) {
     }
   });
 }
+
+const CHARACTERS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+export function randomString(length: number): string {
+  let result = '';
+  for (let i = 0; i < length; ++i) {
+    result += CHARACTERS.charAt(Math.floor(Math.random() * CHARACTERS.length));
+  }
+  return result;
+}
