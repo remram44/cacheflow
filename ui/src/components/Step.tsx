@@ -16,17 +16,30 @@ interface StepProps {
   onSetInputParameter: (name: string, value: string) => void;
 }
 
-export class Step extends React.PureComponent<StepProps> {
+interface StepState {
+  position?: [number, number];
+}
+
+export class Step extends React.PureComponent<StepProps, StepState> {
   outputsRef: React.RefObject<HTMLTableElement>;
   inputsRef: React.RefObject<HTMLTableElement>;
 
+  offset?: [number, number];
+
   constructor(props: StepProps) {
     super(props);
+    this.state = {};
 
     this.outputsRef = React.createRef();
     this.inputsRef = React.createRef();
 
     this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+  }
+
+  getPosition(): [number, number] {
+    return this.state.position || this.props.step.position;
   }
 
   onMouseDown(e: React.MouseEvent) {
@@ -40,7 +53,34 @@ export class Step extends React.PureComponent<StepProps> {
     }
     e.preventDefault();
 
-    // TODO: Drag step
+    document.addEventListener('mouseup', this.onMouseUp);
+    document.addEventListener('mousemove', this.onMouseMove);
+    this.offset = [
+      this.props.step.position[0] - e.clientX,
+      this.props.step.position[1] - e.clientY,
+    ];
+  }
+
+  onMouseUp(e: MouseEvent) {
+    e.preventDefault();
+    document.removeEventListener('mouseup', this.onMouseUp);
+    document.removeEventListener('mousemove', this.onMouseMove);
+    if (this.offset) {
+      this.props.onMove([
+        e.clientX + this.offset[0],
+        e.clientY + this.offset[1],
+      ]);
+      this.offset = undefined;
+    }
+  }
+
+  onMouseMove(e: MouseEvent) {
+    e.preventDefault();
+    if (this.offset) {
+      this.setState({
+        position: [e.clientX + this.offset[0], e.clientY + this.offset[1]],
+      });
+    }
   }
 
   changeInput(name: string, e: React.ChangeEvent<HTMLInputElement>) {
@@ -129,8 +169,8 @@ export class Step extends React.PureComponent<StepProps> {
 
   render() {
     const style = {
-      left: this.props.step.position[0] + 'px',
-      top: this.props.step.position[1] + 'px',
+      left: this.getPosition()[0] + 'px',
+      top: this.getPosition()[1] + 'px',
     };
 
     return (
