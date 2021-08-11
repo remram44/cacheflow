@@ -131,8 +131,8 @@ class TemporaryFile(object):
 
 
 class Pickler(cloudpickle.CloudPickler):
-    def __init__(self, *args, temp_dir, **kwargs):
-        super(Pickler, self).__init__(*args, **kwargs)
+    def __init__(self, file, *, temp_dir):
+        super(Pickler, self).__init__(file, protocol=4)
         self.__temp_dir = temp_dir
 
         if hasattr(self, 'dispatch_table'):
@@ -155,8 +155,8 @@ class Pickler(cloudpickle.CloudPickler):
 
 
 class Unpickler(pickle.Unpickler):
-    def __init__(self, *args, temp_dir, **kwargs):
-        super(Unpickler, self).__init__(*args, **kwargs)
+    def __init__(self, file, *, temp_dir):
+        super(Unpickler, self).__init__(file)
         self.__temp_dir = temp_dir
 
     def find_class(self, module, name):
