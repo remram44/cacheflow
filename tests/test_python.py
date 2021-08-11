@@ -1,4 +1,5 @@
 from cacheflow import python
+import sys
 import unittest
 
 
@@ -20,11 +21,12 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(res['inputs'], {'b', 'd'})
         self.assertEqual(res['outputs'], {'foo'})
 
-        res = python.parse_code(
-            'lambda c=d: (a := b)\n',
-        )
-        self.assertEqual(res['inputs'], {'b', 'd'})
-        self.assertEqual(res['outputs'], set())
+        if sys.version_info >= (3, 8):
+            res = python.parse_code(
+                'lambda c=d: (a := b)\n',
+            )
+            self.assertEqual(res['inputs'], {'b', 'd'})
+            self.assertEqual(res['outputs'], set())
 
         res = python.parse_code(
             'def foo():\n'

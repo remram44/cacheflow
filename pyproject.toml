@@ -41,7 +41,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 markdown = "^3"
 requests = "^2.22"
 PyYAML = "^5.3"
