@@ -46,6 +46,11 @@ _IGNORED_NODES = {
     # Those are not documented properly
     ast.Module, ast.Interactive, ast.Expression,
 }
+if sys.version_info < (3, 9):
+    _IGNORED_NODES.update({
+        ast.Num, ast.Str, ast.Bytes, ast.NameConstant, ast.Ellipsis, ast.Index,
+        ast.ExtSlice
+    })
 if sys.version_info >= (3, 8):
     _IGNORED_NODES.update({
         ast.NamedExpr, ast.FunctionType, ast.TypeIgnore,
