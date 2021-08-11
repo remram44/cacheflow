@@ -25,6 +25,34 @@ class _Frame(object):
         self.locals = set()
 
 
+# Those nodes are not particularly interesting
+_IGNORED_NODES = {
+    ast.Constant, ast.FormattedValue, ast.JoinedStr, ast.List,
+    ast.Tuple, ast.Set, ast.Dict, ast.Starred, ast.Expr, ast.UnaryOp,
+    ast.BinOp, ast.BoolOp, ast.Compare, ast.Call, ast.IfExp,
+    ast.Attribute, ast.Subscript, ast.Slice, ast.Assign,
+    ast.AnnAssign, ast.AugAssign, ast.Raise, ast.Assert, ast.Delete,
+    ast.Pass, ast.If, ast.For, ast.AsyncFor, ast.While, ast.Break,
+    ast.Continue, ast.Try, ast.ExceptHandler, ast.With, ast.AsyncWith,
+    ast.Return, ast.Yield, ast.YieldFrom, ast.Await,
+    # Those are not even nodes
+    ast.Load, ast.Store, ast.Del, ast.UAdd, ast.USub, ast.Not,
+    ast.Invert, ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv,
+    ast.Mod, ast.Pow, ast.LShift, ast.RShift, ast.BitOr, ast.BitXor,
+    ast.BitAnd, ast.MatMult, ast.And, ast.Or, ast.Eq, ast.NotEq,
+    ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Is, ast.IsNot, ast.In,
+    ast.NotIn, ast.keyword, ast.comprehension, ast.alias, ast.withitem,
+    ast.arguments, ast.arg,
+    # Those are not documented properly
+    ast.Module, ast.Interactive, ast.Expression,
+}
+if sys.version_info >= (3, 8):
+    _IGNORED_NODES.update({
+        ast.NamedExpr, ast.FunctionType, ast.TypeIgnore,
+    })
+_IGNORED_NODES = tuple(_IGNORED_NODES)
+
+
 class _Visitor(ast.NodeVisitor):
     def __init__(self):
         self.vars = {}
@@ -35,27 +63,7 @@ class _Visitor(ast.NodeVisitor):
         # Those nodes are not particularly interesting
         # They are listed here so that we can properly show a warning if a node
         # we don't know about is encountered
-        if isinstance(node, (
-            ast.Constant, ast.FormattedValue, ast.JoinedStr, ast.List,
-            ast.Tuple, ast.Set, ast.Dict, ast.Starred, ast.Expr, ast.UnaryOp,
-            ast.BinOp, ast.BoolOp, ast.Compare, ast.Call, ast.IfExp,
-            ast.Attribute, ast.NamedExpr, ast.Subscript, ast.Slice, ast.Assign,
-            ast.AnnAssign, ast.AugAssign, ast.Raise, ast.Assert, ast.Delete,
-            ast.Pass, ast.If, ast.For, ast.AsyncFor, ast.While, ast.Break,
-            ast.Continue, ast.Try, ast.ExceptHandler, ast.With, ast.AsyncWith,
-            ast.Return, ast.Yield, ast.YieldFrom, ast.Await,
-            # Those are not even nodes
-            ast.Load, ast.Store, ast.Del, ast.UAdd, ast.USub, ast.Not,
-            ast.Invert, ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv,
-            ast.Mod, ast.Pow, ast.LShift, ast.RShift, ast.BitOr, ast.BitXor,
-            ast.BitAnd, ast.MatMult, ast.And, ast.Or, ast.Eq, ast.NotEq,
-            ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Is, ast.IsNot, ast.In,
-            ast.NotIn, ast.keyword, ast.comprehension, ast.alias, ast.withitem,
-            ast.arguments, ast.arg,
-            # Those are not documented properly
-            ast.Module, ast.Interactive, ast.Expression, ast.FunctionType,
-            ast.TypeIgnore,
-        )):
+        if isinstance(node, _IGNORED_NODES):
             pass
         elif isinstance(node, ast.Name):
             if isinstance(node.ctx, ast.Store):
