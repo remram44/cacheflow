@@ -2,7 +2,8 @@ run_tests:
   stage: test
   image: python:3.8
   script:
-    - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python - --version 1.1.7 && $HOME/.poetry/bin/poetry config virtualenvs.create false
+    - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python - --version 1.1.7
+    - $HOME/.poetry/bin/poetry config virtualenvs.create false
     - $HOME/.poetry/bin/poetry install --no-interaction
     - python -m readme_renderer README.rst >/dev/null
     - flake8 --ignore=W504,W601 cacheflow
@@ -11,7 +12,8 @@ run_tests:
     - noteflow examples/notebook.cfnb
     - noteflow examples/notebook.cfnb
     - python tests
-    - apt-get update && apt-get install -y nodejs yarnpkg
+    - apt-get update
+    - apt-get install -y nodejs yarnpkg
     - yarnpkg global add @vue/cli
     - rm ui/yarn.lock
     - (cd ui && yarnpkg install)
@@ -25,7 +27,8 @@ run_tests_py3.7:
   stage: test
   image: python:3.7
   script:
-    - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python - --version 1.1.7 && $HOME/.poetry/bin/poetry config virtualenvs.create false
+    - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python - --version 1.1.7
+    - $HOME/.poetry/bin/poetry config virtualenvs.create false
     - $HOME/.poetry/bin/poetry install --no-interaction
     - python -m readme_renderer README.rst >/dev/null
     - flake8 --ignore=W504,W601 cacheflow
