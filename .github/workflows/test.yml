@@ -1,0 +1,75 @@
+name: Test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          $HOME/.local/bin/poetry config virtualenvs.create false
+      - name: Install dependencies
+        run: $HOME/.local/bin/poetry install --no-interaction
+      - name: Check README
+        run: python -m readme_renderer README.rst >/dev/null
+      - name: Check code style
+        run: flake8 --ignore=W504,W601 cacheflow
+      - name: Run example pipeline
+        run: |
+          cacheflow run examples/pipeline.yaml
+          cacheflow run examples/pipeline.yaml
+          noteflow examples/notebook.cfnb
+          noteflow examples/notebook.cfnb
+      - name: Run tests
+        run: python tests
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install Node dependencies
+        run: |
+          yarnpkg global add @vue/cli
+          rm ui/yarn.lock
+          (cd ui && yarnpkg install)
+          (cd ui && yarnpkg run lint)
+      - name: Build UI
+        run: |
+          (cd ui && yarnpkg build)
+          mkdir cacheflow/web/ui cacheflow/web/ui/static
+          mv ui/dist/index.html cacheflow/web/ui/
+          mv ui/dist/* cacheflow/web/ui/static/
+
+  run_tests_py3_7:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          $HOME/.local/bin/poetry config virtualenvs.create false
+      - name: Install dependencies
+        run: $HOME/.local/bin/poetry install --no-interaction
+      - name: Check README
+        run: python -m readme_renderer README.rst >/dev/null
+      - name: Check code style
+        run: flake8 --ignore=W504,W601 cacheflow
+      - name: Run example pipeline
+        run: |
+          cacheflow run examples/pipeline.yaml
+          cacheflow run examples/pipeline.yaml
+          noteflow examples/notebook.cfnb
+          noteflow examples/notebook.cfnb
+      - name: Run tests
+        run: python tests
